@@ -1,6 +1,8 @@
 # Exercícios dos slides
 
-Um notebook por bloco de estudo. Antes de encerrar cada bloco, registre com suas próprias palavras:
+Um notebook por bloco de estudo, seguindo a sequência das aulas. 
+
+Ao longo do exercício tentarei sempre deixar claro:
 
 - o significado da prior, da likelihood, da evidência e da posterior;
 - quais hipóteses probabilísticas foram usadas;
