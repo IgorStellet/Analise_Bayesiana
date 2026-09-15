@@ -49,4 +49,3 @@ pytest
 - Luca Amendola, *Statistical Methods: Lecture Notes*.
 - Slides da disciplina, ministrada por Miguel Quartin.
 
-## Método de trabalho
