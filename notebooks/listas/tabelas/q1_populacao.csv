@@ -1,0 +1,7 @@
+Cenário,Estado,Positivos,Negativos,Total
+Original,Com doença,98.6,1.4000000000000012,100.0
+Original,Sem doença,22997.7,976902.2999999999,999900.0
+(a),Com doença,98.6,1.4000000000000012,100.0
+(a),Sem doença,4999.5,994900.5,999900.0
+(b),Com doença,9860.0,140.0000000000001,10000.0
+(b),Sem doença,22770.0,967230.0,990000.0
