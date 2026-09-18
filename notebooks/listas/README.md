@@ -9,3 +9,7 @@ As discussões no notebook serão mais diretas objetivas e curtas, a discussão 
 ## Lista 1.
 
 **Questão 1:** Entendimento qualitativo sobre Likelihood, priors, evidência e posterio analisando os dados sobre um teste de uma doença.
+
+**Questão 2:** Discussão sobre posterior conjunta, marginalização de variáveis e sombra de regiões. Posterior dada, foco é no entendimento sobre marginalização e modificação do best fit ao marginalizarmos.
+
+**Questão 3:** 
