@@ -1,0 +1,11 @@
+# Pacotes solicitados pelo professor, incluindo matplotlib nos imports.
+numpy
+matplotlib
+cobaya
+getdist
+emcee
+astropy
+
+# Interface e kernel para executar os notebooks localmente.
+jupyterlab
+ipykernel

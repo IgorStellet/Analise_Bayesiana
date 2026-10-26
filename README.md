@@ -18,6 +18,7 @@ Analise_Bayesiana/
 ├── notebooks/
 │   ├── exercicios_slides/   # exemplos e exercícios discutidos em aula
 │   ├── listas/              # listas avaliativas da disciplina
+│   ├── aulas_praticas/      # notebooks de aula, instalador e teste do ambiente
 │   └── projeto/             # projeto computacional final
 ├── src/analise_bayesiana/   # funções reutilizáveis em Python
 └── tests/                   # testes dos resultados numéricos
@@ -35,6 +36,8 @@ jupyter lab
 ```
 
 No Windows, a ativação do ambiente virtual é feita com `.venv\Scripts\activate`.
+
+Para preparar apenas o ambiente das aulas práticas (Cobaya, GetDist, emcee, Astropy e os demais imports solicitados), veja [notebooks/aulas_praticas](notebooks/aulas_praticas/README.md). A instalação é independente da instalação geral acima.
 
 Para verificar os resultados implementados:
 

@@ -6,6 +6,17 @@ O objetivo é fazer os gráficos, tabelas e contas de cada questão para poder e
 
 As discussões no notebook serão mais diretas objetivas e curtas, a discussão completa abrindo as contas será reservada para o PDF com as resoluções (overleaf).
 
+## Organização das saídas
+
+Execute os notebooks com o kernel na pasta `notebooks/listas`. Cada lista cria suas próprias subpastas, preservando os nomes das figuras e tabelas:
+
+| Notebook | Figuras PDF/PNG | Tabelas CSV/LaTeX |
+|:--|:--|:--|
+| `01_lista_1.ipynb` | `figuras/lista_1/` | `tabelas/lista_1/` |
+| `02_lista_2.ipynb` | `figuras/lista_2/` | `tabelas/lista_2/` |
+
+As pastas são criadas automaticamente. Os arquivos antigos diretamente em `figuras/` e `tabelas/` permanecem disponíveis até sua limpeza manual; ao executar novamente, as saídas serão escritas nas subpastas da respectiva lista. Para listas futuras, siga a mesma convenção `lista_3`, `lista_4`, etc. Ao levar os arquivos ao Overleaf, ajuste os caminhos de `includegraphics` e `input` conforme as novas subpastas.
+
 ## Lista 1.
 
 **Questão 1:** Entendimento qualitativo sobre Likelihood, priors, evidência e posterior analisando os dados sobre um teste de uma doença.
