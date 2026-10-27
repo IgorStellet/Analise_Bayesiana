@@ -6,7 +6,7 @@ O repositório foi pensado para cobrir as seguintes etapas do curso:
 
 1. Reproduzir os exemplos e fazer os exercícios numéricos passados em sala, discutindo sua interpretação física;
 2. Fazer atividades da lista de exercícios, com discussões e gráficos para cada exercício;
-3. Fazer o projeto referente ao curso, ainda a ser escolhido -- Fischer | Dali vs MCMC ou Inferência bayesiana de uma correlação GW-galáxia em modelos multitraçadores simplficado (com MCMC).
+3. Fazer o projeto referente ao curso, ainda a ser escolhido -- Fischer | Dali vs MCMC e Fischer normal, com aplicação em catálogo de galáxias (exemplificações)
 
 Além dos notebooks, terá uma pasta src com as funções recorrentes em python e que são constantemente utilizadas (isso será essencial para o projeto, mas ajudará também para estudos futuros)
 Pretendo fazer um arquivo de teste para verificar as funções implementadas em src.
