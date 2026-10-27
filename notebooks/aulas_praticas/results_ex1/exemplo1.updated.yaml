@@ -1,0 +1,66 @@
+theory: null
+likelihood:
+  gauss:
+    type: []
+    speed: -1
+    stop_at_error: false
+    version: null
+    external: true
+    input_params:
+    - x
+    - y
+    output_params: []
+params:
+  x:
+    prior:
+      min: -10
+      max: 10
+    ref: 5
+    proposal: 0.5
+    latex: x
+  y:
+    prior:
+      min: -10
+      max: 10
+    ref: 5
+    proposal: 0.5
+    latex: y
+sampler:
+  mcmc:
+    sampler_type: mcmc
+    supports_periodic_params: true
+    burn_in: 0
+    max_tries: 40d
+    covmat: null
+    covmat_params: null
+    proposal_scale: 2.4
+    output_every: 60s
+    learn_every: 40d
+    temperature: 1
+    learn_proposal: true
+    learn_proposal_Rminus1_max: 2.0
+    learn_proposal_Rminus1_max_early: 30.0
+    learn_proposal_Rminus1_min: 0.0
+    max_samples: 50000
+    Rminus1_stop: 0.01
+    Rminus1_cl_stop: 0.2
+    Rminus1_cl_level: 0.95
+    Rminus1_single_split: 4
+    measure_speeds: true
+    oversample_power: 0.4
+    oversample_thin: true
+    drag: false
+    blocking:
+    - - 1
+      - - x
+        - y
+    callback_function: null
+    callback_every: null
+    seed: null
+    check_every: null
+    oversample: null
+    drag_limits: null
+    fallback_covmat_scale: 4
+    version: 3.6.2
+output: exemplo1
+version: 3.6.2

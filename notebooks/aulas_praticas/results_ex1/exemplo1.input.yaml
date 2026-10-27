@@ -1,0 +1,23 @@
+likelihood:
+  gauss: true
+params:
+  x:
+    prior:
+      min: -10
+      max: 10
+    ref: 5
+    proposal: 0.5
+    latex: x
+  y:
+    prior:
+      min: -10
+      max: 10
+    ref: 5
+    proposal: 0.5
+    latex: y
+sampler:
+  mcmc:
+    learn_proposal: true
+    Rminus1_stop: 0.01
+    max_samples: 50000
+output: exemplo1
