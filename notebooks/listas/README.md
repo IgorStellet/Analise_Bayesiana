@@ -44,7 +44,7 @@ As pastas são criadas automaticamente. Os arquivos antigos diretamente em `figu
 
 **Questão 5:** Distribuição $S^2$, $F$ e $\chi^2$. Nessa questão, a partir de dados, vemos como podemos encontrar o desvio padrão de forma amostral e não enviesada. No tem $b$ interpretamos p-value. No item $c$ discutimos montamos a distribuição F e interpretamos seu significado. Essa questão é um followup da questão anterior, trabalhando com estatística de segundo nível e suas interpretações.
 
-**Questão 6:** --
+**Questão 6:** Tratamento de dados do COVID 19 e como inferir a prevalência de uma cidade a partir dos dados obtidos do teste. Mostramos também como a distribuição aproximada torna-se ruim para posterior com probabilidades altas para prevalências altas. No desafioo mostramos como podemos utilizar dois resultados para obter a prevalência total do país.
 
 
 
