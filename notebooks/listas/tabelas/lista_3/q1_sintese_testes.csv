@@ -1,0 +1,4 @@
+Pergunta,Estatística,Graus de liberdade,p bilateral,100(1-p) (%),Decisão com alpha=5%
+Variâncias: F bilateral,3.7025306347239435,9 e 7,0.09829858563608476,90.17014143639153,Não rejeitar H0
+Médias: variância comum,1.9594920270120355,16,0.06771440201056195,93.2285597989438,Não rejeitar H0
+Médias: Welch,2.0967004731711807,14.044585 (aprox.),0.054604697700501324,94.53953022994986,Não rejeitar H0
