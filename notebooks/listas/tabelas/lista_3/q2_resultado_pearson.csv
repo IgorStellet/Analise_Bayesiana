@@ -1,0 +1,3 @@
+Método,lambda,Pearson q,nu,p aproximado,100(1-p) (%),Decisão a 5%
+Média dos resultados exatos,4.06,6.933696076069918,6,0.32702253245115886,67.29774675488412,Não rejeitar H0
+Máximo da likelihood agrupada,4.046238823987288,6.944301667736506,6,0.32602890381364064,67.39710961863594,Não rejeitar H0
