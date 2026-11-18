@@ -1,0 +1,4 @@
+Eixo,Limite inferior,Limite superior,Células,Passo
+x,-13,13,320,0.08125
+y,-13,13,320,0.08125
+w,-32,32,640,0.1
