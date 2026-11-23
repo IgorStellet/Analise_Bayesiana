@@ -16,6 +16,19 @@ Execute os notebooks com o kernel na pasta `notebooks/listas`. Cada lista cria s
 | `02_lista_2.ipynb` | `figuras/lista_2/` | `tabelas/lista_2/` |
 | `03_lista_3.ipynb` | `figuras/lista_3/` | `tabelas/lista_3/` |
 
+## Ambiente computacional
+
+A partir da raiz do repositório:
+
+~~~bash
+bash notebooks/listas/instalar.sh
+source .venv/bin/activate
+python -m jupyterlab
+~~~
+
+O instalador usa a mesma `.venv` da raiz compartilhada com os slides e as aulas práticas. As listas requerem NumPy 2.0 ou superior, além de SciPy, Matplotlib e IPython. Selecione o kernel **Análise Bayesiana (.venv)** e execute os notebooks com o diretório de trabalho em `notebooks/listas`, para preservar os caminhos das figuras e tabelas.
+
+Para Windows sem WSL, siga a instalação manual do README central, usando o arquivo `notebooks/listas/requirements.txt`.
 
 ## Lista 1.
 

@@ -1,11 +1,15 @@
-# Pacotes solicitados pelo professor, incluindo matplotlib nos imports.
-numpy
-matplotlib
+# Importados nas práticas de MCMC e grid.
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+sympy
+ipywidgets
+ipython
 cobaya
 getdist
 emcee
 astropy
 
-# Interface e kernel para executar os notebooks localmente.
-jupyterlab
-ipykernel
+# Interface e kernel.
+jupyterlab>=4.0
+ipykernel>=6.0

@@ -1,0 +1,10 @@
+# Dependências dos exemplos centrais dos 11 notebooks dos slides.
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+pandas>=1.5
+ipython
+
+# Interface e kernel.
+jupyterlab>=4.0
+ipykernel>=6.0

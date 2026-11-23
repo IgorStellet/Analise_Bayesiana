@@ -1,0 +1,4 @@
+# Acrescenta os complementos opcionais do notebook 09 à base dos slides.
+-r requirements.txt
+cobaya
+emcee

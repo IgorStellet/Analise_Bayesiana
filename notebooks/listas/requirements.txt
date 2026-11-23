@@ -1,0 +1,9 @@
+# np.trapezoid, usado na Lista 2, requer NumPy 2.0+.
+numpy>=2.0
+scipy>=1.10
+matplotlib>=3.7
+ipython
+
+# Interface e kernel.
+jupyterlab>=4.0
+ipykernel>=6.0

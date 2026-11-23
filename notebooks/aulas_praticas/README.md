@@ -1,6 +1,10 @@
-# Aulas práticas
 
-Notebooks trabalhados em aula e preparação do ambiente computacional. O arquivo `00_verificar_ambiente.ipynb` contém os imports solicitados pelo professor: NumPy, Matplotlib, Cobaya, GetDist, emcee e Astropy. JupyterLab e ipykernel completam a instalação para executar os notebooks localmente.
+| Arquivo | Conteúdo |
+|---|---|
+| `00_verificar_ambiente.ipynb` | Imports inicialmente solicitados pelo professor para a prática de MCMC. |
+| `01_Pratica.ipynb` | Amostragem e aplicações com Cobaya, emcee, GetDist e Astropy. |
+| `02_Grid_Method.ipynb` | Integração por malhas, distribuições, contornos e controles interativos. |
+| `mymodule.py` e `data/` | Leitura dos dados utilizados na prática cosmológica. |
 
 ## Instalação em Linux, macOS ou WSL
 
@@ -8,27 +12,26 @@ Com Python 3.10 ou superior, execute a partir da raiz do repositório:
 
 ```bash
 bash notebooks/aulas_praticas/instalar.sh
-source notebooks/aulas_praticas/.venv/bin/activate
+source .venv/bin/activate
 python -m jupyterlab
 ```
 
-O script cria `.venv` dentro desta pasta, instala os pacotes de `requirements.txt`, confere as dependências e executa `verificar_ambiente.py`. Pode ser executado novamente para conferir o mesmo ambiente. A localização do script é resolvida automaticamente, permitindo chamá-lo de outra pasta. A ativação deve ser feita no terminal após o término do script.
+O instalador cria ou reaproveita **a `.venv` da raiz**, compartilhada com os slides e as listas. Instala as dependências desta pasta, executa `pip check`, confere os imports de MCMC e grid e registra o kernel **Análise Bayesiana (.venv)** dentro do próprio ambiente. A ativação no terminal é feita depois que o script termina.
 
-Para escolher baixar as dependências em um ambiente que você já está acostumado a utilizar, basta fazer, com o ambiente já ativo:
+Além dos pacotes inicialmente pedidos para MCMC, o arquivo de requisitos inclui SciPy, SymPy e ipywidgets, utilizados na prática de grid. Os controles interativos precisam do notebook aberto em uma interface compatível, como o JupyterLab; a visualização estática do GitHub não executa esses controles.
 
-```bash
-python -m pip install -r notebooks/aulas_praticas/requirements.txt
-python notebooks/aulas_praticas/verificar_ambiente.py
-```
+Para Windows sem WSL, siga o [README central](../../README.md#windows-sem-wsl), trocando o caminho do arquivo de requisitos e do verificador pelos desta pasta.
 
-Se a criação do ambiente indicar ausência de `venv`, instale o suporte a ambientes virtuais da sua distribuição. Em Debian/Ubuntu, o pacote correspondente costuma ser `python3-venv`.
+## Verificação
 
-## Verificação no notebook e no VSCode
-
-Abra `00_verificar_ambiente.ipynb`, escolha o interpretador `notebooks/aulas_praticas/.venv/bin/python` e execute todas as células. Confira o caminho do interpretador e as versões exibidas. O verificador pelo terminal usa os mesmos imports:
+Para repetir a verificação sem executar a instalação:
 
 ```bash
-notebooks/aulas_praticas/.venv/bin/python notebooks/aulas_praticas/verificar_ambiente.py
+.venv/bin/python notebooks/aulas_praticas/verificar_ambiente.py
 ```
 
-Esse teste verifica o carregamento dos módulos e dos símbolos pedidos. As execuções de MCMC e o uso de dados cosmológicos serão conferidos nos próprios notebooks das aulas.
+No VS Code, selecione o interpretador `.venv/bin/python` da raiz. No JupyterLab, selecione **Análise Bayesiana (.venv)**. O caminho exibido por `sys.executable` permite conferir qual ambiente está sendo usado.
+
+Abra os notebooks com o diretório de trabalho nesta pasta, para que os caminhos relativos para `mymodule.py` e `data/` sejam encontrados. Os arquivos de dados devem permanecer disponíveis com os nomes esperados pelo código.
+
+O verificador testa o carregamento dos módulos e símbolos utilizados. A execução das cadeias, os resultados das integrações, a leitura dos dados e a interface dos controles são conferidos nos próprios notebooks.
