@@ -4,12 +4,13 @@ Material de estudo, exercícios e projeto computacional da disciplina de Estatí
 
 O repositório foi pensado para cobrir as seguintes etapas do curso:
 
-1. Reproduzir os exemplos e fazer os exercícios numéricos passados em sala, discutindo sua interpretação física;
-2. Fazer atividades da lista de exercícios, com discussões e gráficos para cada exercício;
-3. Fazer o projeto referente ao curso, ainda a ser escolhido -- Fischer | Dali vs MCMC e Fischer normal, com aplicação em catálogo de galáxias (exemplificações)
+1. Reproduzir os exercícios e estudos feitos em sala, focando no que foi passado nos slides, tentando discutir a física e a matemática em cada um deles. O objetivo é que cada conceito possa ser explorado e que esses notebooks sirvam como uma maneira de também acompanhar as aulas e aprofundar o conteúdo. Um objetivo futuro é torná-los mais fluidos, didáticos e iterativos para os usuários;
+2. Fazer as listas de exercícios (3 ao todo), mais explicadas e de didáticas do que os notebooks da aula, com interpretações claras e gráficos que explorem o máximo de cada questão. As explicações mais didáticas encontram-se no overleaf de cada lista;
+3. Principal: Projeto final da disciplina. Fisher DALI como aproximação para posterior. Suas vantagens, limitações e aplicações. 
 
-Além dos notebooks, terá uma pasta src com as funções recorrentes em python e que são constantemente utilizadas (isso será essencial para o projeto, mas ajudará também para estudos futuros)
-Pretendo fazer um arquivo de teste para verificar as funções implementadas em src.
+Os notebooks dos slides e das listas encontram-se na pasta notebooks. O projeto assim encontra-se na pasta projeto, nela será feita tudo referente ao projeto, incluindo os arquivos .py com funções que serão utilizadas de forma recorrente para construir os gráficos e imagens, constantemente utilizadas (isso será essencial para o projeto, mas ajudará também para estudos futuros, por tratarem-se de funções mais genéricas que podem ser reutilizadas).
+
+Dentro do projeto também pretendo fazer arquivos de teste para validar se tudo está sendo feito de forma coerente.
 
 ## Estrutura
 
