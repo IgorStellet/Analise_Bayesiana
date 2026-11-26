@@ -386,14 +386,14 @@ def lower_truncated_gaussian_moments(
 # ------------------------------------------------------------------------------
 
 def _model_derivatives(derivatives: tuple[ArrayLike, ...], n_parameters: int) -> tuple[FloatArray, ...]:
-    """Confere se J, H e T têm os eixos dos dados e dos parâmetros na ordem certa.
+    """Confere se J, H, T e U têm os eixos dos dados e dos parâmetros na ordem certa.
 
     Cada tensor tem forma (n_dados, p, ..., p), com k eixos de parâmetros
     na derivada de ordem k. Derivadas mistas devem ser simétricas nesses eixos.
-    Forneça derivadas brutas: os fatores 1/2! e 1/3! entram na avaliação.
+    Forneça derivadas brutas: os fatores 1/2!, 1/3! e 1/4! entram na avaliação.
     """
-    if not 1 <= len(derivatives) <= 3:  # Este bloco implementa singleto, dubleto e tripleto.
-        raise ValueError("Forneça de uma a três derivadas consecutivas: J, H, T.")
+    if not 1 <= len(derivatives) <= 4:  # A quarta ordem será usada no contraexemplo do Bloco 3.
+        raise ValueError("Forneça de uma a quatro derivadas consecutivas: J, H, T, U.")
     first = np.asarray(derivatives[0], dtype=float)  # A primeira derivada é o Jacobiano J.
     if first.ndim != 2 or first.shape[0] == 0:  # O primeiro eixo enumera os dados.
         raise ValueError("J deve ter forma (n_dados, n_parametros), com n_dados > 0.")
@@ -407,19 +407,19 @@ def _model_derivatives(derivatives: tuple[ArrayLike, ...], n_parameters: int) ->
         for axis in range(1, k):  # Trocas adjacentes conferem a simetria entre parâmetros.
             if not np.allclose(tensor, np.swapaxes(tensor, axis, axis+1), rtol=1e-10, atol=1e-12):
                 raise ValueError(f"A derivada de ordem {k} não é simétrica nos eixos dos parâmetros.")
-        checked.append(tensor)  # Mantém a ordem J, H, T.
+        checked.append(tensor)  # Mantém a ordem J, H, T, U.
     return tuple(checked)
 
 
 def _taylor_shift(delta: FloatArray, derivatives: tuple[FloatArray, ...], order: int) -> FloatArray:
-    """Calcula J.delta + H[delta,delta]/2 + T[delta,delta,delta]/6.
+    """Soma as respostas do modelo até a ordem escolhida, com os fatores 1/k!.
 
     Esta função interna recebe formas já conferidas. O einsum soma os
     índices dos parâmetros e mantém o índice dos dados. As reticências
     permitem avaliar um ponto, uma lista de pontos ou uma malha inteira.
     """
     if isinstance(order, (bool, np.bool_)) or not isinstance(order, (int, np.integer)):
-        raise ValueError("order deve ser um inteiro: 1, 2 ou 3.")
+        raise ValueError("order deve ser um inteiro: 1, 2, 3 ou 4.")
     if not 1 <= order <= len(derivatives):  # Não podemos usar derivadas que não foram fornecidas.
         raise ValueError(f"order deve estar entre 1 e {len(derivatives)}.")
     shift = np.einsum("ia,...a->...i", derivatives[0], delta)  # Resposta linear J.delta.
@@ -427,12 +427,15 @@ def _taylor_shift(delta: FloatArray, derivatives: tuple[FloatArray, ...], order:
         shift += 0.5*np.einsum("iab,...a,...b->...i", derivatives[1], delta, delta)
     if order >= 3:  # O tripleto acrescenta a terceira derivada do modelo.
         shift += np.einsum("iabc,...a,...b,...c->...i", derivatives[2], delta, delta, delta)/6.0
+    if order >= 4:  # A quarta derivada acrescenta a resposta quártica do modelo.
+        shift += np.einsum("iabcd,...a,...b,...c,...d->...i", derivatives[3],
+                           delta, delta, delta, delta)/24.0
     return shift
 
 
 @dataclass(frozen=True)
 class DALIExpansion:
-    """Guarda a expansão preparada para avaliar as três ordens sem refazer Cholesky.
+    """Guarda a expansão preparada para avaliar até quatro ordens sem refazer Cholesky.
 
     Construa este objeto com prepare_dali. Os tensores e o resíduo já
     receberam L^{-1}, onde C = L L.T. Isso incorpora as correlações dos
@@ -441,7 +444,7 @@ class DALIExpansion:
     """
 
     center: FloatArray  # Ponto theta_0 em que as derivadas foram calculadas.
-    whitened_derivatives: tuple[FloatArray, ...]  # J, H e T após aplicar L^{-1} no eixo dos dados.
+    whitened_derivatives: tuple[FloatArray, ...]  # J, H, T e U após aplicar L^{-1} no eixo dos dados.
     whitened_residual: FloatArray  # L^{-1}(dados - modelo no centro).
     log_data_normalization: float  # -N/2 log(2*pi) - log|C|/2; não normaliza em parâmetros.
 
@@ -449,7 +452,7 @@ class DALIExpansion:
         """Retorna E_K = ||L^{-1}(r_0 - T_K)||²/2, que é não negativo.
 
         points tem forma (..., p). order=1 usa J; order=2 usa J,H;
-        order=3 usa J,H,T. A prior não entra neste quadrado.
+        order=3 usa J,H,T; order=4 usa também U. A prior fica fora deste quadrado.
         """
         values = np.asarray(points, dtype=float)  # Aceita listas ou arrays de parâmetros.
         if values.ndim < 1 or values.shape[-1] != self.center.size or not np.all(np.isfinite(values)):
@@ -476,7 +479,7 @@ def prepare_dali(
 ) -> DALIExpansion:
     """Prepara DALI com C fixa e derivadas avaliadas no mesmo centro.
 
-    center é theta_0; derivatives contém (J,), (J,H) ou (J,H,T), sem
+    center é theta_0; derivatives contém (J,), (J,H), (J,H,T) ou (J,H,T,U), sem
     fatores de Taylor. residual é dados-mu(theta_0). Se omitido, usa
     resíduo zero: o forecast com dados iguais à previsão fiducial.
 
@@ -486,7 +489,7 @@ def prepare_dali(
     em parâmetros ou boa aproximação global; a prior é tratada à parte.
     """
     anchor = _vector(center, "center").copy()  # Guarda uma cópia do ponto escolhido.
-    tensors = _model_derivatives(derivatives, anchor.size)  # Confere as formas e a simetria de J,H,T.
+    tensors = _model_derivatives(derivatives, anchor.size)  # Confere as formas e a simetria de J,H,T,U.
     n_data = tensors[0].shape[0]  # O primeiro eixo de cada derivada é o dos dados.
     cov = _covariance(data_covariance, n_data, "data_covariance")  # Confere a covariância dos dados.
     res = np.zeros(n_data) if residual is None else _vector(residual, "residual").copy()
@@ -494,7 +497,7 @@ def prepare_dali(
         raise ValueError("residual deve ter o mesmo número de entradas que o eixo dos dados de J.")
     factor = cholesky(cov, lower=True, check_finite=False)  # Calcula C = L L.T uma única vez.
     whitened = []  # As avaliações posteriores usarão somente esses tensores já ponderados.
-    for tensor in tensors:  # Aplica a mesma transformação a J, H e T.
+    for tensor in tensors:  # Aplica a mesma transformação a cada derivada fornecida.
         flat = tensor.reshape(n_data, -1)  # Junta temporariamente os eixos dos parâmetros.
         transformed = solve_triangular(factor, flat, lower=True, check_finite=False)
         whitened.append(transformed.reshape(tensor.shape))  # Recupera os eixos originais.
@@ -502,3 +505,168 @@ def prepare_dali(
     log_det = 2*np.log(np.diag(factor)).sum()  # log|C| a partir da diagonal de Cholesky.
     log_norm = -0.5*(n_data*np.log(2*np.pi)+log_det)  # Normalização da densidade dos dados.
     return DALIExpansion(anchor, tuple(whitened), whitened_residual, float(log_norm))
+
+
+# ------------------------------------------------------------------------------
+# Malhas em uma dimensão: normalização e momentos dos exemplos controlados
+# ------------------------------------------------------------------------------
+
+def normalize_log_grid_1d(log_density: ArrayLike, x: ArrayLike) -> tuple[FloatArray, float]:
+    """Normaliza uma densidade em log numa malha 1D; devolve (pdf, log_integral).
+
+    O domínio faz parte da integral. Pode representar um suporte físico
+    declarado ou um recorte numérico que deve ser testado. Os pontos de x
+    podem ter espaçamentos diferentes, como numa mudança não linear de variável.
+    """
+    axis = _vector(x, "x")  # Confere o eixo e o converte para números reais.
+    if axis.size < 3 or not np.all(np.diff(axis) > 0):  # Simpson precisa de um eixo crescente.
+        raise ValueError("x deve ser crescente e conter pelo menos três pontos.")
+    logs = np.asarray(log_density, dtype=float)  # Recebe a densidade antes da normalização.
+    if logs.shape != axis.shape:  # Deve haver uma densidade para cada ponto do eixo.
+        raise ValueError("log_density deve ter a mesma forma de x.")
+    if np.any(np.isnan(logs)) or np.any(np.isposinf(logs)) or not np.any(np.isfinite(logs)):
+        raise ValueError("log_density deve ter massa finita e não pode conter NaN ou +inf.")
+    shift = float(np.max(logs))  # Retira o máximo para evitar subfluxo na exponencial.
+    unnormalized = np.exp(logs-shift)  # -inf é permitido e representa densidade nula.
+    integral = float(simpson(unnormalized, x=axis))  # Integra com as coordenadas reais do eixo.
+    if not np.isfinite(integral) or integral <= 0:
+        raise ValueError("A integral da densidade deve ser finita e positiva.")
+    return unnormalized/integral, float(shift+np.log(integral))
+
+
+def grid_moments_1d(pdf: ArrayLike, x: ArrayLike) -> tuple[float, float]:
+    """Integra média e variância em 1D; não corrige um domínio insuficiente.
+
+    A média e a variância usam a massa integrada, permitindo conferir
+    resultados mesmo quando a normalização numérica não é exatamente um.
+    """
+    axis = _vector(x, "x")  # Confere o vetor de coordenadas.
+    density = _vector(pdf, "pdf")  # Confere os valores da densidade.
+    if density.shape != axis.shape or np.any(density < 0):
+        raise ValueError("pdf deve ser não negativa e ter a mesma forma de x.")
+    if axis.size < 3 or not np.all(np.diff(axis) > 0):
+        raise ValueError("x deve ser crescente e conter pelo menos três pontos.")
+    mass = float(simpson(density, x=axis))  # Verifica a massa representada pela malha.
+    if not np.isfinite(mass) or mass <= 0:
+        raise ValueError("pdf precisa ter massa finita e positiva.")
+    mean = float(simpson(axis*density, x=axis)/mass)  # Integra o primeiro momento.
+    variance = float(simpson((axis-mean)**2*density, x=axis)/mass)  # Usa o momento central para estabilidade.
+    return mean, variance
+
+
+def grid_tail_mass_1d(pdf: ArrayLike, x: ArrayLike, lower: float) -> float:
+    """Integra a massa acima de lower, sem renormalizar a densidade recebida.
+
+    Quando lower coincide com um nó a menos de arredondamento, reutiliza
+    esse nó: inserir dois pontos quase iguais tornaria Simpson instável.
+    Caso contrário, interpola a densidade apenas na nova fronteira.
+    """
+    axis = _vector(x, "x")  # Confere as coordenadas de integração.
+    density = _vector(pdf, "pdf")  # Confere os valores da densidade.
+    if axis.size < 3 or not np.all(np.diff(axis) > 0):
+        raise ValueError("x deve ser crescente e conter pelo menos três pontos.")
+    if density.shape != axis.shape or np.any(density < 0):
+        raise ValueError("pdf deve ser não negativa e ter a mesma forma de x.")
+    if not np.isfinite(lower) or not axis[0] <= lower <= axis[-1]:
+        raise ValueError("lower deve pertencer ao domínio da malha.")
+    index = int(np.searchsorted(axis, lower))  # Localiza o primeiro nó que alcança o limite.
+    neighbors = (max(0,index-1), min(index,axis.size-1))  # Considera os vizinhos dos dois lados.
+    nearest = min(neighbors, key=lambda i: abs(axis[i]-lower))  # Encontra o nó numericamente mais próximo.
+    tolerance = 8*np.finfo(float).eps*max(1.0,abs(lower),abs(axis[nearest]))  # Tolera apenas arredondamento de ponto flutuante.
+    if abs(axis[nearest]-lower) <= tolerance:  # Evita criar nós quase duplicados na fronteira.
+        tail_x, tail_pdf = axis[nearest:], density[nearest:]
+    else:  # Insere o limite quando ele realmente fica entre dois nós distintos.
+        tail_x = np.r_[lower,axis[index:]]
+        tail_pdf = np.r_[np.interp(lower,axis,density),density[index:]]
+    if tail_x.size < 2:  # A massa acima da extremidade superior é zero.
+        return 0.0
+    return float(simpson(tail_pdf,x=tail_x))  # Integra somente o domínio suave da cauda.
+
+
+# ------------------------------------------------------------------------------
+# Marginalização em três dimensões e momentos da forma das densidades
+# ------------------------------------------------------------------------------
+
+def density_moments_1d(pdf: ArrayLike, x: ArrayLike) -> dict[str,float]:
+    """Integra média, desvio, assimetria e excesso de curtose de uma densidade.
+
+    São momentos da distribuição tabulada, não estimadores de uma amostra.
+    Excesso zero é o valor gaussiano; um valor negativo indica curtose
+    menor que a gaussiana, sem implicar proximidade da forma uniforme.
+    """
+    axis = _vector(x,"x")  # Confere as coordenadas da malha.
+    density = _vector(pdf,"pdf")  # Confere a densidade recebida.
+    mean,variance = grid_moments_1d(density,axis)  # Reutiliza as verificações da quadratura 1D.
+    if variance <= 0:
+        raise ValueError("A variância deve ser positiva para padronizar os momentos.")
+    mass = float(simpson(density,x=axis))  # Corrige apenas o arredondamento da massa tabulada.
+    central3 = float(simpson((axis-mean)**3*density,x=axis)/mass)  # Integra o terceiro momento central.
+    central4 = float(simpson((axis-mean)**4*density,x=axis)/mass)  # Integra o quarto momento central.
+    return {"mean":mean,"std":float(np.sqrt(variance)),
+            "skewness":central3/variance**1.5,"excess_kurtosis":central4/variance**2-3.0}
+
+
+@dataclass(frozen=True)
+class Grid3DResult:
+    """Guarda as marginais e os três planos, sem armazenar um cubo 3D.
+
+    pairs[(i,j)] tem eixo j nas linhas e eixo i nas colunas. Todos os
+    planos e marginais usam o mesmo normalizador da posterior conjunta.
+    log_normalizer é a integral do núcleo recebido, não de outra função.
+    """
+    axes: tuple[FloatArray,FloatArray,FloatArray]
+    marginals: tuple[FloatArray,FloatArray,FloatArray]
+    pairs: dict[tuple[int,int],FloatArray]
+    log_normalizer: float
+
+
+def _regular_simpson_weights(axis: FloatArray) -> FloatArray:
+    """Monta os pesos positivos de Simpson num eixo regular com número ímpar de nós."""
+    steps = np.diff(axis)  # Mede o espaçamento antes de aplicar a regra regular.
+    if axis.size < 3 or axis.size%2 == 0 or np.any(steps<=0) or not np.allclose(steps,steps[0]):
+        raise ValueError("Cada eixo deve ser crescente, regular e ter número ímpar de nós.")
+    weights = np.ones(axis.size)  # As extremidades recebem peso um.
+    weights[1:-1:2] = 4  # Nós interiores de índice ímpar recebem peso quatro.
+    weights[2:-1:2] = 2  # Os demais nós interiores recebem peso dois.
+    return weights*(steps[0]/3)  # Inclui a largura das células na quadratura.
+
+
+def marginalize_grid_3d(log_density, axes: tuple[ArrayLike,ArrayLike,ArrayLike],
+                        log_shift: float = 0.0) -> Grid3DResult:
+    """Integra uma densidade 3D por planos do terceiro parâmetro.
+
+    log_density recebe points de forma (n_y,n_x,3) e retorna log q na
+    forma (n_y,n_x). O terceiro eixo é percorrido plano a plano. O uso
+    de memória cresce com os três planos 2D, não com n_x*n_y*n_w.
+    log_shift é uma constante de estabilização; escolha um valor próximo
+    ao log do pico. Os eixos são regulares e têm número ímpar de nós.
+    """
+    if len(axes) != 3 or not np.isfinite(log_shift):
+        raise ValueError("Forneça três eixos e um log_shift finito.")
+    xx,yy,ww = tuple(_vector(axis,f"axis_{i}").copy() for i,axis in enumerate(axes))
+    wx,wy,wwgt = tuple(_regular_simpson_weights(axis) for axis in (xx,yy,ww))  # Calcula os pesos nos três eixos.
+    qxy = np.zeros((yy.size,xx.size))  # Acumula a integral sobre o terceiro parâmetro.
+    qxw = np.zeros((ww.size,xx.size))  # Guarda a integral sobre o segundo parâmetro.
+    qyw = np.zeros((ww.size,yy.size))  # Guarda a integral sobre o primeiro parâmetro.
+    points = np.empty((yy.size,xx.size,3))  # Reserva apenas um plano de coordenadas.
+    points[...,0],points[...,1] = np.meshgrid(xx,yy)  # Mantém fixas as coordenadas dos dois primeiros eixos.
+    for k,value in enumerate(ww):  # Percorre o terceiro eixo sem construir um cubo inteiro.
+        points[...,2] = value  # Define o valor do parâmetro do plano atual.
+        logs = np.asarray(log_density(points),dtype=float)  # Avalia o log do núcleo nesse plano.
+        if logs.shape != qxy.shape or np.any(np.isnan(logs)) or np.any(np.isposinf(logs)):
+            raise ValueError("log_density deve retornar um plano sem NaN ou +inf.")
+        with np.errstate(over='ignore'):
+            plane = np.exp(logs-log_shift)  # Retira a mesma constante em todos os planos.
+        if not np.all(np.isfinite(plane)):
+            raise ValueError("A exponencial excedeu a precisão; escolha log_shift próximo ao pico.")
+        qxy += wwgt[k]*plane  # Integra sobre w com seus pesos de Simpson.
+        qxw[k] = np.einsum('i,ij->j',wy,plane)  # Integra y e mantém x no plano xw.
+        qyw[k] = np.einsum('ij,j->i',plane,wx)  # Integra x e mantém y no plano yw.
+    total = float(np.einsum('i,ij,j->',wy,qxy,wx))  # Obtém um único normalizador conjunto.
+    if total <= 0 or not np.isfinite(total):
+        raise ValueError("O núcleo precisa ter massa finita e positiva no domínio.")
+    pairs = {(0,1):qxy/total,(0,2):qxw/total,(1,2):qyw/total}  # Normaliza todos os planos pela mesma integral.
+    marginals = (np.einsum('i,ij->j',wy,qxy)/total,  # Integra y para obter p(x).
+                 np.einsum('ij,j->i',qxy,wx)/total,  # Integra x para obter p(y).
+                 np.einsum('ij,j->i',qxw,wx)/total)  # Integra x no plano xw para obter p(w).
+    return Grid3DResult((xx,yy,ww),marginals,pairs,float(log_shift+np.log(total)))
