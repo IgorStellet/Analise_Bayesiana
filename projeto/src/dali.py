@@ -21,13 +21,15 @@ FloatArray = NDArray[np.float64]
 
 def _vector(values: ArrayLike, name: str) -> FloatArray: 
     "Verifica se os vetores possuem de fato formato de vetores"
+    # Converte a entrada para números reais antes de conferir sua forma.
     result = np.asarray(values, dtype=float)
     if result.ndim != 1 or result.size == 0 or not np.all(np.isfinite(result)):
         raise ValueError(f"{name} deve ser um vetor finito não vazio.")
     return result
 
 def _covariance(values: ArrayLike, size: int, name: str) -> FloatArray:
-    "Verifica se a matriz de variância está da forma adequada, isto é, se é quadrada, se é simétrica e se é definida positiva"
+    "Verifica se a matriz de covariância está da forma adequada, isto é, se é quadrada, se é simétrica e se é definida positiva"
+    # Converte a entrada para números reais antes de conferir sua forma.
     result = np.asarray(values, dtype=float)
     if result.shape != (size, size) or not np.all(np.isfinite(result)):
         raise ValueError(f"{name} deve ter forma ({size}, {size}) e valores finitos.")
@@ -44,14 +46,16 @@ def _covariance(values: ArrayLike, size: int, name: str) -> FloatArray:
 
 
 
+# Resultados do ajuste linear
+# ------------------------------------------------------------------------------
+
 @dataclass(frozen=True)
 class LinearGaussianResult:
     """Resultado de um modelo Linear com todos os elementos dados
     
     ``fisher`` está relacionado a aproximação da likelihood, ``precision`` inclui
     a prior gaussiana, se fornecida. ``mean`` é a média/MAP da posterior
-    gaussiana. Sem prior, registra o limite de prior constante; esse
-    limite não define uma evidência para podermos comparar modelos. covarience é a matriz     de convariânca/inverso da matriz de fisher
+    gaussiana. Sem prior, registra o limite de prior constante; Covariance é a covariância posterior: a inversa de precision, que inclui a prior
     """
     mle: FloatArray
     fisher: FloatArray
@@ -59,6 +63,9 @@ class LinearGaussianResult:
     precision: FloatArray
     covariance: FloatArray
 
+
+# Likelihood gaussiana e informação de Fisher
+# ------------------------------------------------------------------------------
 
 def gaussian_logpdf(points: ArrayLike, mean: ArrayLike, covariance: ArrayLike) -> FloatArray:
     """Log da densidade gaussiana multivariada, com normalização.
@@ -68,18 +75,27 @@ def gaussian_logpdf(points: ArrayLike, mean: ArrayLike, covariance: ArrayLike) -
     consistentes entre si e com as da covariância. O retorno tem a forma
     das dimensões iniciais de ``points`` (escalar para um único ponto).
     """
+    # Converte e confere o vetor central da distribuição.
     center = _vector(mean, "mean")
+    # Confere dimensões, simetria e positividade da covariância.
     cov = _covariance(covariance, center.size, "covariance")
+    # Converte os pontos recebidos para um array numérico.
     values = np.asarray(points, dtype=float)
     if values.ndim < 1 or values.shape[-1] != center.size:
         raise ValueError("A última dimensão de points deve coincidir com mean.")
     if not np.all(np.isfinite(values)):
         raise ValueError("points contém valores não finitos.")
+    # Fatora a covariância para resolver sistemas sem formar sua inversa.
     factor = cholesky(cov, lower=True, check_finite=False)
+    # Mede os deslocamentos em relação ao centro.
     delta = (values - center).reshape(-1, center.size)
+    # Aplica L^{-1} para ponderar os resíduos e incorporar suas correlações.
     whitened = solve_triangular(factor, delta.T, lower=True, check_finite=False).T
+    # Soma os quadrados no espaço dos resíduos já ponderados.
     square = np.sum(whitened**2, axis=1)
+    # Calcula log|C| usando a diagonal da fatoração de Cholesky.
     log_determinant = 2 * np.log(np.diag(factor)).sum()
+    # Junta a distância quadrática e os termos de normalização.
     result = -0.5 * (square + center.size * np.log(2 * np.pi) + log_determinant)
     return result.reshape(values.shape[:-1])
 
@@ -88,12 +104,15 @@ def fisher_gaussian(jacobian: ArrayLike, data_covariance: ArrayLike) -> FloatArr
     """Informação esperada J.T C^{-1} J para C fixa.
 
     O Jacobiano tem forma ``(n_data, n_parameters)``. A matriz retornada
-    pode ser semidefinida positiva e singular; a função não a inverte.
+    pode ser semidefinida positiva e singular;
     """
+    # Converte o Jacobiano: dados nas linhas, parâmetros nas colunas.
     jac = np.asarray(jacobian, dtype=float)
     if jac.ndim != 2 or not np.all(np.isfinite(jac)):
         raise ValueError("jacobian deve ser uma matriz finita.")
+    # Confere dimensões, simetria e positividade da covariância.
     cov = _covariance(data_covariance, jac.shape[0], "data_covariance")
+    # Calcula a informação J.T C^{-1} J sem inverter C explicitamente.
     result = jac.T @ cho_solve(cho_factor(cov, lower=True), jac)
     return (result + result.T) / 2
 
@@ -109,17 +128,23 @@ def observed_gaussian_hessian(
     Usa residual = dados - modelo, J com forma ``(n, p)`` e segundas
     derivadas do modelo com forma ``(n, p, p)``. Não inclui a prior.
     """
+    # Confere o vetor de resíduos, definido como dados menos modelo.
     res = _vector(residual, "residual")
+    # Converte o Jacobiano: dados nas linhas, parâmetros nas colunas.
     jac = np.asarray(jacobian, dtype=float)
     if jac.ndim != 2 or jac.shape[0] != res.size or not np.all(np.isfinite(jac)):
         raise ValueError("jacobian é incompatível com residual.")
+    # Recebe as segundas derivadas de cada previsão em relação aos parâmetros.
     hessians = np.asarray(model_hessians, dtype=float)
     if hessians.shape != (res.size, jac.shape[1], jac.shape[1]):
         raise ValueError("model_hessians deve ter forma (n_data, n_parameters, n_parameters).")
     if not np.all(np.isfinite(hessians)):
         raise ValueError("model_hessians contém valores não finitos.")
+    # Confere dimensões, simetria e positividade da covariância.
     cov = _covariance(data_covariance, res.size, "data_covariance")
+    # Resolve C x = resíduo para calcular o termo observado da curvatura.
     weighted_residual = cho_solve(cho_factor(cov, lower=True), res)
+    # Subtrai de Fisher o termo que depende do resíduo observado.
     result = fisher_gaussian(jac, cov) - np.einsum("i,iab->ab", weighted_residual, hessians)
     return (result + result.T) / 2
 
@@ -138,39 +163,60 @@ def linear_gaussian_posterior(
     sua média e covariância precisam ser fornecidas juntas. O ajuste
     não reescala as incertezas por chi-quadrado reduzido.
     """
+    # Confere e guarda o vetor de dados do ajuste.
     observed = _vector(data, "data")
+    # Converte a matriz X que relaciona parâmetros e previsões.
     matrix = np.asarray(design, dtype=float)
     if matrix.ndim != 2 or matrix.shape[0] != observed.size or not np.all(np.isfinite(matrix)):
         raise ValueError("design deve ser uma matriz finita compatível com data.")
+    # Confere dimensões, simetria e positividade da covariância.
     cov = _covariance(data_covariance, observed.size, "data_covariance")
+    # Fatora a covariância para resolver sistemas sem formar sua inversa.
     factor = cho_factor(cov, lower=True)
+    # Calcula J.T C^{-1} J com o Jacobiano do modelo linear.
     fisher = fisher_gaussian(matrix, cov)
+    # Monta o lado direito das equações normais ou acrescenta a informação da prior.
     rhs = matrix.T @ cho_solve(factor, observed)
     try:
+        # Resolve as equações normais para obter o máximo da likelihood.
         mle = cho_solve(cho_factor(fisher, lower=True), rhs)
     except np.linalg.LinAlgError as error:
         raise ValueError("O modelo linear deve identificar todos os parâmetros: X precisa ter posto completo.") from error
+    # Começa pela precisão da likelihood; a prior será somada abaixo.
     precision = fisher.copy()
     if (prior_mean is None) != (prior_covariance is None):
         raise ValueError("Forneça prior_mean e prior_covariance juntos.")
     if prior_mean is not None:
+        # Converte e confere o vetor central da distribuição.
         center = _vector(prior_mean, "prior_mean")
         if center.size != matrix.shape[1]:
             raise ValueError("prior_mean tem dimensão incorreta.")
+        # Confere a covariância da prior gaussiana.
         prior_cov = _covariance(prior_covariance, center.size, "prior_covariance")
+        # Resolve o sistema que fornece a precisão da prior.
         prior_precision = cho_solve(cho_factor(prior_cov, lower=True), np.eye(center.size))
         precision += prior_precision
+        # Monta o lado direito das equações normais ou acrescenta a informação da prior.
         rhs = rhs + prior_precision @ center
+    # Fatora a precisão total, já incluindo a prior.
     posterior_factor = cho_factor(precision, lower=True)
+    # Resolve o sistema para obter a média posterior.
     posterior_mean = cho_solve(posterior_factor, rhs)
+    # Obtém a covariância posterior resolvendo contra a identidade.
     posterior_cov = cho_solve(posterior_factor, np.eye(precision.shape[0]))
     return LinearGaussianResult(mle, fisher, posterior_mean, precision, posterior_cov)
 
 
+# Integração em malhas e momentos da posterior
+# ------------------------------------------------------------------------------
+
 def integrate_grid_2d(values: ArrayLike, x: ArrayLike, y: ArrayLike) -> float:
     """Integra values[y_index, x_index] por Simpson em ambos os eixos."""
+    # Confere o eixo horizontal ou monta suas coordenadas na malha.
     xx = _vector(x, "x")
+    # Confere o eixo vertical.
     yy = _vector(y, "y")
+    # Converte os valores tabulados que serão integrados.
     array = np.asarray(values, dtype=float)
     if min(xx.size, yy.size) < 3 or not np.all(np.diff(xx) > 0) or not np.all(np.diff(yy) > 0):
         raise ValueError("Os eixos devem ser crescentes e conter pelo menos três pontos.")
@@ -185,11 +231,15 @@ def normalize_log_grid(log_density: ArrayLike, x: ArrayLike, y: ArrayLike) -> tu
     -inf é permitido para representar suporte nulo. O domínio finito
     dos eixos faz parte da integral e deve ter sua extensão validada.
     """
+    # Recebe a densidade em log, permitindo -inf em regiões excluídas.
     logs = np.asarray(log_density, dtype=float)
     if np.any(np.isnan(logs)) or np.any(np.isposinf(logs)) or not np.any(np.isfinite(logs)):
         raise ValueError("A densidade em log deve conter massa finita e não pode conter NaN ou +inf.")
+    # Escolhe um deslocamento que evita exponenciais numericamente muito pequenas.
     shift = float(np.max(logs))
+    # Exponencia a densidade depois de retirar o deslocamento.
     unnormalized = np.exp(logs - shift)
+    # Integra a densidade deslocada com as coordenadas dos eixos.
     integral = integrate_grid_2d(unnormalized, x, y)
     if integral <= 0 or not np.isfinite(integral):
         raise ValueError("A integral da densidade deve ser finita e positiva.")
@@ -202,21 +252,30 @@ def grid_moments_2d(pdf: ArrayLike, x: ArrayLike, y: ArrayLike) -> tuple[FloatAr
     A média e os momentos são divididos pela massa numericamente
     integrada. Isso não corrige uma escolha insuficiente de domínio.
     """
+    # Confere o eixo horizontal ou monta suas coordenadas na malha.
     xx, yy = np.meshgrid(x, y)
+    # Recebe a densidade já tabulada na malha.
     density = np.asarray(pdf, dtype=float)
     if np.any(density < 0):
         raise ValueError("pdf não pode conter densidades negativas.")
+    # Mede a massa total antes de calcular os momentos.
     mass = integrate_grid_2d(density, x, y)
     if mass <= 0:
         raise ValueError("pdf precisa ter massa positiva.")
+    # Integra as coordenadas para obter a média.
     mean = np.array([integrate_grid_2d(grid * density, x, y) / mass for grid in (xx, yy)])
+    # Mede os deslocamentos em relação ao centro.
     delta = (xx - mean[0], yy - mean[1])
+    # Integra os produtos dos deslocamentos para obter a covariância.
     covariance = np.array([
         [integrate_grid_2d(a * b * density, x, y) / mass for b in delta]
         for a in delta
     ])
     return mean, covariance
 
+
+# Regiões de credibilidade e elipses
+# ------------------------------------------------------------------------------
 
 def hpd_thresholds_2d(
     pdf: ArrayLike, x: ArrayLike, y: ArrayLike,
@@ -228,27 +287,38 @@ def hpd_thresholds_2d(
     As massas usam os pesos positivos da mesma quadratura de Simpson.
     A fronteira e a interpolação dos contornos permanecem discretizadas.
     """
+    # Confere os dois eixos usados para localizar os níveis HPD.
     axes = [_vector(axis, name) for axis, name in ((x, "x"), (y, "y"))]
+    # Guarda os pesos de quadratura de cada eixo.
     weights = []
     for axis in axes:
+        # Calcula os espaçamentos para conferir a regularidade da malha.
         steps = np.diff(axis)
         if axis.size < 3 or axis.size % 2 == 0 or np.any(steps <= 0) or not np.allclose(steps, steps[0]):
             raise ValueError("HPD requer eixos regulares com número ímpar de nós.")
         # Integrar cada vetor da base canônica fornece os pesos da quadratura.
         weights.append(simpson(np.eye(axis.size), x=axis, axis=1))
+    # Recebe a densidade já tabulada na malha.
     density = np.asarray(pdf, dtype=float)
     if density.shape != (axes[1].size, axes[0].size) or not np.all(np.isfinite(density)) or np.any(density < 0):
         raise ValueError("pdf deve ser finito, não negativo e compatível com os eixos.")
+    # Confere as probabilidades desejadas para as regiões HPD.
     levels = _vector(probabilities, "probabilities")
     if np.any((levels <= 0) | (levels >= 1)):
         raise ValueError("As probabilidades devem estar entre zero e um.")
+    # Organiza os nós num único vetor para ordená-los por densidade.
     flat = density.ravel()
+    # Multiplica densidades pelos pesos da quadratura para obter massas.
     masses = (density * weights[1][:, None] * weights[0][None, :]).ravel()
+    # Soma as massas da malha.
     total = masses.sum()
     if total <= 0:
         raise ValueError("pdf precisa ter massa positiva.")
+    # Ordena os nós da maior para a menor densidade.
     order = np.argsort(flat)[::-1]
+    # Acumula a probabilidade nessa ordem para encontrar cada limiar.
     cumulative = np.cumsum(masses[order]) / total
+    # Localiza o primeiro nó que atinge cada probabilidade solicitada.
     indices = np.minimum(np.searchsorted(cumulative, levels), order.size - 1)
     return flat[order[indices]]
 
@@ -257,16 +327,25 @@ def gaussian_ellipse(
     mean: ArrayLike, covariance: ArrayLike, probability: float = 0.683, n_points: int = 400,
 ) -> FloatArray:
     """Pontos da elipse gaussiana 2D com conteúdo conjunto probability."""
+    # Converte e confere o vetor central da distribuição.
     center = _vector(mean, "mean")
     if center.size != 2 or not 0 < probability < 1 or n_points < 4:
         raise ValueError("Use dois parâmetros, probabilidade em (0, 1) e ao menos quatro pontos.")
+    # Confere dimensões, simetria e positividade da covariância.
     cov = _covariance(covariance, 2, "covariance")
+    # Obtém as variâncias e direções principais da covariância.
     eigenvalues, eigenvectors = np.linalg.eigh(cov)
+    # Percorre um círculo unitário que será transformado numa elipse.
     angle = np.linspace(0, 2 * np.pi, n_points)
+    # Escreve as coordenadas do círculo unitário.
     circle = np.stack((np.cos(angle), np.sin(angle)))
+    # Ajusta os semieixos para a probabilidade conjunta escolhida.
     scales = np.sqrt(chi2.ppf(probability, df=2) * eigenvalues)
     return center + (eigenvectors @ (scales[:, None] * circle)).T
 
+
+# Fronteiras: momentos de uma gaussiana truncada
+# ------------------------------------------------------------------------------
 
 def lower_truncated_gaussian_moments(
     mean: ArrayLike, covariance: ArrayLike, index: int, lower: float = 0.0,
@@ -277,16 +356,149 @@ def lower_truncated_gaussian_moments(
     A fórmula é analítica; sua precisão em caudas extremas ainda depende
     de aritmética finita. Os exemplos do bloco não usam caudas extremas.
     """
+    # Converte e confere o vetor central da distribuição.
     center = _vector(mean, "mean")
+    # Confere dimensões, simetria e positividade da covariância.
     cov = _covariance(covariance, center.size, "covariance")
     if not isinstance(index, (int, np.integer)) or not 0 <= index < center.size or not np.isfinite(lower):
         raise ValueError("index ou lower inválido.")
+    # Extrai o desvio marginal do parâmetro que receberá o corte.
     sigma = np.sqrt(cov[index, index])
+    # Expressa a fronteira em desvios da gaussiana original.
     alpha = (lower - center[index]) / sigma
+    # Calcula a massa da cauda permitida em log para maior estabilidade.
     log_mass = norm.logsf(alpha)
+    # Calcula a razão de Mills usada nos momentos da gaussiana truncada.
     ratio = np.exp(norm.logpdf(alpha) - log_mass)
+    # Seleciona as covariâncias com o parâmetro que recebeu o corte.
     column = cov[:, index]
+    # Desloca a média de todos os parâmetros segundo suas correlações.
     shifted_mean = center + column / sigma * ratio
+    # Calcula o fator que reduz a covariância ao remover a cauda.
     delta = ratio * (ratio - alpha)
+    # Aplica a correção analítica da covariância depois do corte.
     shifted_cov = cov - np.outer(column, column) / sigma**2 * delta
     return shifted_mean, shifted_cov, float(np.exp(log_mass))
+
+
+# ------------------------------------------------------------------------------
+# Hierarquia de DALI: derivadas do modelo, quadrado completo e likelihood
+# ------------------------------------------------------------------------------
+
+def _model_derivatives(derivatives: tuple[ArrayLike, ...], n_parameters: int) -> tuple[FloatArray, ...]:
+    """Confere se J, H e T têm os eixos dos dados e dos parâmetros na ordem certa.
+
+    Cada tensor tem forma (n_dados, p, ..., p), com k eixos de parâmetros
+    na derivada de ordem k. Derivadas mistas devem ser simétricas nesses eixos.
+    Forneça derivadas brutas: os fatores 1/2! e 1/3! entram na avaliação.
+    """
+    if not 1 <= len(derivatives) <= 3:  # Este bloco implementa singleto, dubleto e tripleto.
+        raise ValueError("Forneça de uma a três derivadas consecutivas: J, H, T.")
+    first = np.asarray(derivatives[0], dtype=float)  # A primeira derivada é o Jacobiano J.
+    if first.ndim != 2 or first.shape[0] == 0:  # O primeiro eixo enumera os dados.
+        raise ValueError("J deve ter forma (n_dados, n_parametros), com n_dados > 0.")
+    n_data = first.shape[0]  # Todas as derivadas devem prever os mesmos dados.
+    checked = []  # Guarda cópias dos tensores conferidos.
+    for k, values in enumerate(derivatives, start=1):  # k é a ordem da derivada.
+        tensor = np.array(values, dtype=float, copy=True)  # Evita alterar os arrays recebidos.
+        expected_shape = (n_data,) + (n_parameters,) * k  # J: (N,p); H: (N,p,p); T: (N,p,p,p).
+        if tensor.shape != expected_shape or not np.all(np.isfinite(tensor)):
+            raise ValueError(f"A derivada de ordem {k} deve ser finita e ter forma {expected_shape}.")
+        for axis in range(1, k):  # Trocas adjacentes conferem a simetria entre parâmetros.
+            if not np.allclose(tensor, np.swapaxes(tensor, axis, axis+1), rtol=1e-10, atol=1e-12):
+                raise ValueError(f"A derivada de ordem {k} não é simétrica nos eixos dos parâmetros.")
+        checked.append(tensor)  # Mantém a ordem J, H, T.
+    return tuple(checked)
+
+
+def _taylor_shift(delta: FloatArray, derivatives: tuple[FloatArray, ...], order: int) -> FloatArray:
+    """Calcula J.delta + H[delta,delta]/2 + T[delta,delta,delta]/6.
+
+    Esta função interna recebe formas já conferidas. O einsum soma os
+    índices dos parâmetros e mantém o índice dos dados. As reticências
+    permitem avaliar um ponto, uma lista de pontos ou uma malha inteira.
+    """
+    if isinstance(order, (bool, np.bool_)) or not isinstance(order, (int, np.integer)):
+        raise ValueError("order deve ser um inteiro: 1, 2 ou 3.")
+    if not 1 <= order <= len(derivatives):  # Não podemos usar derivadas que não foram fornecidas.
+        raise ValueError(f"order deve estar entre 1 e {len(derivatives)}.")
+    shift = np.einsum("ia,...a->...i", derivatives[0], delta)  # Resposta linear J.delta.
+    if order >= 2:  # O dubleto acrescenta a curvatura do modelo.
+        shift += 0.5*np.einsum("iab,...a,...b->...i", derivatives[1], delta, delta)
+    if order >= 3:  # O tripleto acrescenta a terceira derivada do modelo.
+        shift += np.einsum("iabc,...a,...b,...c->...i", derivatives[2], delta, delta, delta)/6.0
+    return shift
+
+
+@dataclass(frozen=True)
+class DALIExpansion:
+    """Guarda a expansão preparada para avaliar as três ordens sem refazer Cholesky.
+
+    Construa este objeto com prepare_dali. Os tensores e o resíduo já
+    receberam L^{-1}, onde C = L L.T. Isso incorpora as correlações dos
+    dados e transforma a distância de Mahalanobis numa soma de quadrados.
+    Os métodos recebem parâmetros absolutos; o centro é subtraído aqui.
+    """
+
+    center: FloatArray  # Ponto theta_0 em que as derivadas foram calculadas.
+    whitened_derivatives: tuple[FloatArray, ...]  # J, H e T após aplicar L^{-1} no eixo dos dados.
+    whitened_residual: FloatArray  # L^{-1}(dados - modelo no centro).
+    log_data_normalization: float  # -N/2 log(2*pi) - log|C|/2; não normaliza em parâmetros.
+
+    def exponent(self, points: ArrayLike, order: int = 2) -> FloatArray:
+        """Retorna E_K = ||L^{-1}(r_0 - T_K)||²/2, que é não negativo.
+
+        points tem forma (..., p). order=1 usa J; order=2 usa J,H;
+        order=3 usa J,H,T. A prior não entra neste quadrado.
+        """
+        values = np.asarray(points, dtype=float)  # Aceita listas ou arrays de parâmetros.
+        if values.ndim < 1 or values.shape[-1] != self.center.size or not np.all(np.isfinite(values)):
+            raise ValueError("points deve ser finito e sua última dimensão deve coincidir com center.")
+        delta = values-self.center  # Mede o deslocamento em relação ao ponto da expansão.
+        shift = _taylor_shift(delta, self.whitened_derivatives, order)  # Aproxima a mudança da previsão.
+        residual = self.whitened_residual-shift  # Mantém o resíduo dos dados, inclusive se não for zero.
+        return 0.5*np.sum(residual**2, axis=-1)  # Soma sobre os dados e conserva os eixos da malha.
+
+    def loglike(self, points: ArrayLike, order: int = 2) -> FloatArray:
+        """Avalia log L_K com a normalização gaussiana no espaço dos dados.
+
+        O retorno é uma likelihood, não uma posterior normalizada.
+        Some a log-prior e integre/amostre para obter a posterior.
+        """
+        return self.log_data_normalization-self.exponent(points, order=order)
+
+
+def prepare_dali(
+    center: ArrayLike,
+    derivatives: tuple[ArrayLike, ...],
+    data_covariance: ArrayLike,
+    residual: ArrayLike | None = None,
+) -> DALIExpansion:
+    """Prepara DALI com C fixa e derivadas avaliadas no mesmo centro.
+
+    center é theta_0; derivatives contém (J,), (J,H) ou (J,H,T), sem
+    fatores de Taylor. residual é dados-mu(theta_0). Se omitido, usa
+    resíduo zero: o forecast com dados iguais à previsão fiducial.
+
+    C deve ser conhecida, simétrica, definida positiva e independente
+    dos parâmetros. Não é necessário inverter Fisher, nem exigir que
+    J tenha posto completo. Essa liberdade não garante normalização
+    em parâmetros ou boa aproximação global; a prior é tratada à parte.
+    """
+    anchor = _vector(center, "center").copy()  # Guarda uma cópia do ponto escolhido.
+    tensors = _model_derivatives(derivatives, anchor.size)  # Confere as formas e a simetria de J,H,T.
+    n_data = tensors[0].shape[0]  # O primeiro eixo de cada derivada é o dos dados.
+    cov = _covariance(data_covariance, n_data, "data_covariance")  # Confere a covariância dos dados.
+    res = np.zeros(n_data) if residual is None else _vector(residual, "residual").copy()
+    if res.size != n_data:  # O resíduo precisa ter uma entrada por dado.
+        raise ValueError("residual deve ter o mesmo número de entradas que o eixo dos dados de J.")
+    factor = cholesky(cov, lower=True, check_finite=False)  # Calcula C = L L.T uma única vez.
+    whitened = []  # As avaliações posteriores usarão somente esses tensores já ponderados.
+    for tensor in tensors:  # Aplica a mesma transformação a J, H e T.
+        flat = tensor.reshape(n_data, -1)  # Junta temporariamente os eixos dos parâmetros.
+        transformed = solve_triangular(factor, flat, lower=True, check_finite=False)
+        whitened.append(transformed.reshape(tensor.shape))  # Recupera os eixos originais.
+    whitened_residual = solve_triangular(factor, res, lower=True, check_finite=False)
+    log_det = 2*np.log(np.diag(factor)).sum()  # log|C| a partir da diagonal de Cholesky.
+    log_norm = -0.5*(n_data*np.log(2*np.pi)+log_det)  # Normalização da densidade dos dados.
+    return DALIExpansion(anchor, tuple(whitened), whitened_residual, float(log_norm))
