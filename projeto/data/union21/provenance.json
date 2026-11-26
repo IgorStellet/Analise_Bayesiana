@@ -1,0 +1,23 @@
+[
+  {
+    "file": "SCPUnion2.1_mu_vs_z.txt",
+    "url": "https://supernova.lbl.gov/Union/figures/SCPUnion2.1_mu_vs_z.txt?download=1",
+    "bytes": 33899,
+    "sha256": "98fc24a6eef71ebd0c90e25b69271c0a3a8ffe23e7e3c2fada37b9334b1101eb",
+    "retrieved_on": "2026-11-26"
+  },
+  {
+    "file": "SCPUnion2.1_covmat_nosys.txt",
+    "url": "https://supernova.lbl.gov/Union/figures/SCPUnion2.1_covmat_nosys.txt?download=1",
+    "bytes": 1353015,
+    "sha256": "6496c6c761313e253ce1fe1b3cc8990f0b1cfdf9970f26fcc660792eac57f3d7",
+    "retrieved_on": "2026-11-26"
+  },
+  {
+    "file": "SCPUnion2.1_covmat_sys.txt",
+    "url": "https://supernova.lbl.gov/Union/figures/SCPUnion2.1_covmat_sys.txt?download=1",
+    "bytes": 6037238,
+    "sha256": "4b73e2e99365a768ffb52bb02702b2c294c6af90179b5d48126d530381ad6b8f",
+    "retrieved_on": "2026-11-26"
+  }
+]

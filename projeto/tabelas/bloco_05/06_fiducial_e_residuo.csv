@@ -1,0 +1,7 @@
+Experimento,Método,TV contra sua referência
+Fiducial sem ruído,D1 / Fisher,0.23977586812230658
+Fiducial sem ruído,D2,0.08315988369613328
+Fiducial sem ruído,D3,0.015472945453700638
+Fiducial sem ruído,D4,0.11464076743066938
+"Observado, resíduo preservado",D3,0.01508242374467514
+"Observado, resíduo zerado",D3,0.017346560447725645

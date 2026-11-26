@@ -670,3 +670,51 @@ def marginalize_grid_3d(log_density, axes: tuple[ArrayLike,ArrayLike,ArrayLike],
                  np.einsum('ij,j->i',qxy,wx)/total,  # Integra x para obter p(y).
                  np.einsum('ij,j->i',qxw,wx)/total)  # Integra x no plano xw para obter p(w).
     return Grid3DResult((xx,yy,ww),marginals,pairs,float(log_shift+np.log(total)))
+
+
+# ------------------------------------------------------------------------------
+# Avaliação comprimida: conserva o quadrado de DALI sem percorrer todos os dados
+# ------------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class CompressedDALI:
+    """Representa a mesma expansão usando uma fatoração QR no espaço dos dados.
+
+    Não aproxima novamente o modelo. A norma de uma combinação das colunas
+    [resíduo, coeficientes de Taylor] é preservada por QR. O número de colunas
+    depende dos parâmetros e da ordem, não do tamanho do catálogo.
+    """
+    center: FloatArray
+    powers: NDArray[np.int64]
+    factor: FloatArray
+
+    def exponent(self, points: ArrayLike, order: int = 2) -> FloatArray:
+        """Avalia o mesmo E_K não negativo, usando monômios e uma matriz pequena."""
+        values = np.asarray(points, dtype=float)  # Aceita as mesmas coordenadas usadas para calcular as derivadas.
+        if values.ndim < 1 or values.shape[-1] != self.center.size or not np.all(np.isfinite(values)):
+            raise ValueError('points deve ser finito e terminar no número de parâmetros da expansão.')
+        if isinstance(order, (bool, np.bool_)) or not isinstance(order, (int, np.integer)) or not 1 <= order <= self.powers.sum(axis=1).max():
+            raise ValueError('order deve ser uma das ordens fornecidas na expansão.')
+        delta = values-self.center  # Mantém o mesmo centro da expansão original.
+        monomials = -np.prod(delta[..., None, :]**self.powers, axis=-1)  # Calcula -Delta**alpha para os termos do modelo.
+        monomials[..., 0] = 1.  # O primeiro coeficiente multiplica o resíduo central.
+        monomials[..., self.powers.sum(axis=1) > order] = 0.  # Desliga somente os termos acima da ordem pedida.
+        residual = monomials @ self.factor.T  # Reproduz a norma após eliminar direções ortogonais sem contribuição.
+        return .5*np.sum(residual**2, axis=-1)  # Conserva o quadrado completo e sua positividade.
+
+
+def compress_dali(expansion: DALIExpansion) -> CompressedDALI:
+    """Comprime uma expansão preparada, conservando resíduo e termos cruzados."""
+    from itertools import combinations_with_replacement  # Enumera apenas derivadas distintas por simetria.
+    from math import factorial  # Converte derivadas brutas em coeficientes de Taylor.
+    p = expansion.center.size  # Conta quantos parâmetros foram expandidos.
+    powers = [np.zeros(p, dtype=int)]  # Reserva o monômio constante que acompanha o resíduo.
+    columns = [expansion.whitened_residual]  # Conserva o resíduo observado, mesmo quando não é zero.
+    for k, tensor in enumerate(expansion.whitened_derivatives, start=1):
+        for indices in combinations_with_replacement(range(p), k):
+            counts = np.bincount(indices, minlength=p)  # Identifica as potências do monômio misto.
+            denominator = np.prod([factorial(int(n)) for n in counts])  # Usa alpha!, incluindo a multiplicidade das permutações.
+            columns.append(tensor[(slice(None),)+indices]/denominator)  # Monta o coeficiente distinto de Taylor.
+            powers.append(counts)
+    _, factor = np.linalg.qr(np.column_stack(columns), mode='reduced')  # Preserva todas as normas das combinações dessas colunas.
+    return CompressedDALI(expansion.center.copy(), np.array(powers), factor)
