@@ -1,0 +1,57 @@
+{
+  "base_commit": "94afbc58dda234ba1ac6742208b85dcaf26ffe9c",
+  "data": "artificial; Gaussian data errors, fixed covariance",
+  "measure": "dx dy",
+  "bounds": [
+    [
+      -2.2,
+      2.2
+    ],
+    [
+      -2.2,
+      2.6
+    ]
+  ],
+  "grid_shape": [
+    401,
+    441
+  ],
+  "refined_shape": [
+    641,
+    701
+  ],
+  "orders": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "default_model": {
+    "kind": "gaussian",
+    "amplitude": 0.72,
+    "frequency": 2.35,
+    "bend": 0.1,
+    "sx": 0.78,
+    "sy": 0.38,
+    "radius": 0.72,
+    "tau": 0.16
+  },
+  "mixture_weights": [
+    0.3,
+    0.4,
+    0.3
+  ],
+  "mixture_components_known": true
+}

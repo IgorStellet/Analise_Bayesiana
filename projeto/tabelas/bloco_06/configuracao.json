@@ -1,0 +1,44 @@
+{
+  "github_base": "fc11c4fa46beec277180721de9379f47d7bbbce3",
+  "sn_covariance": "Union 2.1 full with systematics",
+  "bao_release": "BOSS DR12 consensus BAO-only post-reconstruction",
+  "parameter_order": [
+    "Omega_m",
+    "w",
+    "B"
+  ],
+  "B_definition": "H0 * rd / rd_fid",
+  "rd_fid_Mpc": 147.78,
+  "bounds": [
+    [
+      0.005,
+      0.995
+    ],
+    [
+      -4.5,
+      -0.2
+    ],
+    [
+      40.0,
+      100.0
+    ]
+  ],
+  "grid_shape": [
+    161,
+    241,
+    181
+  ],
+  "distance_quadrature": 48,
+  "mcmc": {
+    "coordinates": [
+      "Omega_m",
+      "log(-w)",
+      "B"
+    ],
+    "steps": 40000,
+    "warmup": 5000,
+    "chains": 4,
+    "seed": 2026
+  },
+  "cross_dataset_error_covariance": "assumed zero; internal full matrices retained"
+}

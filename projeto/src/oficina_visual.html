@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A persistência da não gaussianidade — Oficina VII</title>
+<style>
+:root{color-scheme:dark;--bg:#101e2a;--panel:#172a38;--line:#304957;--ink:#f5eddf;--muted:#a5b9bf;--gold:#e9bd76;--teal:#70c4b6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif}main{max-width:1440px;margin:auto;padding:38px 30px 24px}header{display:flex;gap:30px;align-items:start;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:24px}.eyebrow{color:var(--gold);font-size:11px;letter-spacing:.18em;text-transform:uppercase}h1{font:clamp(27px,3vw,43px)/1.12 Georgia,serif;margin:12px 0}p{color:var(--muted);max-width:820px;margin:12px 0}.badge{color:var(--teal);border:1px solid var(--line);border-radius:30px;padding:6px 13px;white-space:nowrap;font-size:12px}.workspace{display:grid;grid-template-columns:260px 1fr;gap:25px;margin-top:25px}.controls{background:var(--panel);border:1px solid var(--line);padding:20px;border-radius:12px;align-self:start}label{display:block;font-size:12px;color:var(--muted);margin:15px 0 4px}label:first-child{margin-top:0}select,button{width:100%;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);padding:9px;font:inherit;font-size:13px}input[type=range]{width:100%;accent-color:var(--teal)}output{float:right;color:var(--ink);font-variant-numeric:tabular-nums}button{cursor:pointer;margin-top:10px}.primary{background:var(--teal);color:var(--bg);font-weight:700}button:hover{filter:brightness(1.12)}.check{display:flex;gap:8px;align-items:center;margin-top:10px}.check input{accent-color:var(--teal)}.check label{margin:0}.panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.panel{min-width:0}.panel h2{font-size:14px;font-weight:600;margin:0 0 4px}.panel p{font-size:11px;margin:0 0 10px;min-height:32px}.canvasbox{background:#0e1a24;border:1px solid var(--line);border-radius:9px;overflow:hidden}canvas{display:block;width:100%;height:auto}.axis{font:11px/1.4 ui-monospace,monospace;color:var(--muted);margin-top:7px}.legend{height:6px;background:linear-gradient(90deg,#101e2a,#164756,#2b8d95,#9bd3b6,#fff0c2);margin:10px 0 5px;border-radius:4px}.legend.error{background:linear-gradient(90deg,#467bb5,#101e2a,#edb176)}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:24px}.stat{padding:15px;background:var(--panel);border:1px solid var(--line);border-radius:9px}.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{display:block;font-size:23px;font-weight:500;color:var(--gold);margin-top:4px;font-variant-numeric:tabular-nums}.explanation{border-top:1px solid var(--line);padding-top:17px;margin-top:24px}.explanation p{font-size:13px}.notice{color:var(--gold)!important}details{border-top:1px solid var(--line);margin-top:24px;padding-top:15px}summary{cursor:pointer;color:var(--teal)}code{color:var(--ink)}footer{margin-top:28px;color:var(--muted);font-size:11px}a{color:var(--teal)}@media(max-width:1000px){.workspace{grid-template-columns:210px 1fr}.panels{grid-template-columns:repeat(2,minmax(0,1fr))}.panel:last-child{grid-column:1/-1;max-width:360px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){main{padding:20px 16px}header{display:block}.badge{display:inline-block;margin-top:8px}.workspace{display:block}.controls{margin-bottom:25px}.panels{grid-template-columns:1fr}.panel:last-child{grid-column:auto;max-width:none}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">Oficina VII · Igor Stellet · Fisher → DALI</div><h1>A persistência da<br>não gaussianidade</h1><p>Fisher trouxe a régua. DALI trouxe os pincéis. Escolha a geometria, aumente a ordem e confira se a imagem bonita também aproxima a probabilidade.</p></div><div class="badge">Sem kernel · sem internet · modelos artificiais</div></header>
+<div class="workspace"><aside class="controls">
+<label for="model">Sala da oficina</label><select id="model"><option value="gaussian">I · O relógio amolece</option><option value="ring">II · O aro sem centro único</option><option value="rational">III · O limite do pincel</option></select>
+<label for="order">Ordem das derivadas K <output id="orderOut"></output></label><input id="order" type="range" min="1" max="16" step="1" value="1">
+<label for="blend">Transição visual K → K+1 <output id="blendOut"></output></label><input id="blend" type="range" min="0" max="1" step=".05" value="0">
+<label for="amplitude">Intensidade da dobra a <output id="amplitudeOut"></output></label><input id="amplitude" type="range" min="0" max="1.2" step=".02" value=".72">
+<label for="frequency">Frequência k <output id="frequencyOut"></output></label><input id="frequency" type="range" min=".5" max="3.5" step=".05" value="2.35">
+<label for="bend">Curvatura quadrática β <output id="bendOut"></output></label><input id="bend" type="range" min="-.2" max=".2" step=".02" value=".10">
+<label for="radius">Raio de convergência ρ <output id="radiusOut"></output></label><input id="radius" type="range" min=".4" max="1.5" step=".05" value=".72">
+<label for="anchor">Âncora no aro · graus <output id="anchorOut"></output></label><input id="anchor" type="range" min="0" max="360" step="15" value="90">
+<label for="resolution">Malha de prévia</label><select id="resolution"><option value="161">161 × 161 · rápida</option><option value="241" selected>241 × 241 · mais fina</option></select>
+<div class="check"><input id="contours" type="checkbox" checked><label for="contours">Contornos HPD da referência</label></div>
+<button id="play" class="primary">▶ Formar a imagem</button><button id="reset">Restaurar esta sala</button><button id="download">Salvar comparação PNG</button>
+</aside><section>
+<div class="panels"><article class="panel"><h2>01 · Modelo completo</h2><p>A referência usa a função inteira e a mesma prior.</p><div class="canvasbox"><canvas id="exact" width="440" height="480" aria-label="Densidade da posterior exata"></canvas></div><div class="legend"></div><div class="axis">p(x,y): 0 → <span id="maxP"></span><br>x ∈ [−2.2,2.2] · y ∈ [−2.2,2.6]</div></article>
+<article class="panel"><h2 id="approxTitle">02 · DALI</h2><p id="approxSubtitle">Taylor do modelo, seguido do quadrado completo.</p><div class="canvasbox"><canvas id="approx" width="440" height="480" aria-label="Densidade aproximada por DALI"></canvas></div><div class="legend"></div><div class="axis">Mesma escala linear da referência.<br>○ Âncora da expansão.</div></article>
+<article class="panel"><h2>03 · Onde a tinta sobra?</h2><p>Laranja: excesso de probabilidade; azul: falta.</p><div class="canvasbox"><canvas id="error" width="440" height="480" aria-label="Diferença entre densidade aproximada e exata"></canvas></div><div class="legend error"></div><div class="axis">p<sub>aprox</sub> − p<sub>exata</sub>: ±<span id="maxError"></span><br>A escala do erro é própria e simétrica.</div></article></div>
+<div class="stats"><div class="stat"><small>Variação total 2D</small><strong id="tv"></strong></div><div class="stat"><small>Grau máximo do expoente</small><strong id="degree"></strong></div><div class="stat"><small>Posto de Fisher · 2 parâmetros</small><strong id="rank"></strong></div><div class="stat"><small>Ordem / transição</small><strong id="stage"></strong></div></div>
+<div class="explanation"><p id="explanation"></p><p class="notice" id="notice"></p><p id="status" aria-live="polite"></p></div>
+</section></div>
+<details><summary>O que está sendo calculado?</summary><p>Nos relógios preenchidos, os dados artificiais são d=(0,0), a previsão é μ=(x,y−f(x)) e C=diag(0.78²,0.38²). Na sala I, f(x)=a sen(kx)+βx². Na sala III, f(x)=a x²/(ρ²+x²). No aro, d=1, μ=(x/0.78)²+((y−f(x))/0.38)² e σ=0.16.</p><p>O código expande o resíduo ponderado h=C<sup>−1/2</sup>(μ−d) por grau total, incluindo seu valor no centro. Em ordem K, E<sub>K</sub>=½‖Taylor<sub>K</sub>(h)‖². Uma prior uniforme no retângulo mostrado é aplicada igualmente a todas as ordens. A integração usa pesos positivos de Simpson nos dois eixos; os contornos exibidos são os de 68.27% (contínuo) e 95.45% (tracejado) da referência.</p><p>O controle de transição interpola h<sub>K</sub> e h<sub>K+1</sub> antes do quadrado. Seus valores interiores são uma homotopia ilustrativa, não uma “ordem fracionária” de DALI. O botão de animação mostra as ordens inteiras, sem alterar a função-alvo ou a escala de cor.</p><p>As métricas desta página são prévias na malha escolhida. As tabelas finais do notebook têm seu próprio teste de refinamento. Em sala III, as linhas verticais marcam |x|=ρ; fora desse intervalo o Taylor em x=0 não converge para a função completa.</p></details>
+<footer>Inspiração: <a href="https://www.moma.org/collection/works/79018/" target="_blank" rel="noopener">A Persistência da Memória · Dalí · 1931</a>. Estas figuras são construções probabilísticas do projeto. Nenhuma imagem de museu é carregada por esta página.</footer>
+</main>
+<script>
+'use strict';
+// A matemática é a mesma de src/oficina.py; não há bibliotecas externas.
+const $=id=>document.getElementById(id), SX=.78,SY=.38,TAU=.16;
+const XMIN=-2.2,XMAX=2.2,YMIN=-2.2,YMAX=2.6;
+let timer=null,frameData=null,scheduled=false;
+function warp(x,s){return s.kind==='rational'?s.a*x*x/(s.rho*s.rho+x*x):s.a*Math.sin(s.k*x)+s.b*x*x;}
+function warpCoefficients(x0,K,s){
+  // Guarda derivada/fatorial: assim os coeficientes já podem multiplicar delta x^n.
+  const f=Array(K+1).fill(0);
+  if(s.kind==='rational'){
+    const d=[s.rho*s.rho+x0*x0,2*x0,1],inv=Array(K+1).fill(0);inv[0]=1/d[0];
+    for(let n=1;n<=K;n++){let v=0;for(let j=1;j<=Math.min(n,2);j++)v+=d[j]*inv[n-j];inv[n]=-v/d[0];}
+    for(let n=0;n<=K;n++)f[n]=-s.a*s.rho*s.rho*inv[n];f[0]+=s.a;
+  }else{
+    let factorial=1,power=1;
+    for(let n=0;n<=K;n++){if(n){factorial*=n;power*=s.k;}f[n]=s.a*power*Math.sin(s.k*x0+n*Math.PI/2)/factorial;}
+    f[0]+=s.b*x0*x0;if(K>=1)f[1]+=2*s.b*x0;if(K>=2)f[2]+=s.b;
+  }
+  return f;
+}
+function series(K,c,s){
+  // Monta a série do resíduo ponderado. Cada termo é [potência x, potência y, coeficiente].
+  const f=warpCoefficients(c[0],K,s);
+  const first=[[0,0,c[0]/SX],[1,0,1/SX]],second=f.map((v,n)=>[n,0,-v/SY]);second[0][2]+=c[1]/SY;second.push([0,1,1/SY]);
+  if(s.kind!=='ring')return [first,second];
+  const result=new Map();  // No aro, os produtos também geram derivadas mistas.
+  for(const component of [first,second])for(const [a,b,u] of component)for(const [d,e,v] of component){if(a+b+d+e<=K){let key=(a+d)+','+(b+e);result.set(key,(result.get(key)||0)+u*v);}}
+  result.set('0,0',(result.get('0,0')||0)-1);
+  return [Array.from(result,([key,v])=>[...key.split(',').map(Number),v/TAU])];
+}
+function coefficientInY(component,dx){
+  // Reúne termos em 1, delta y e delta y² para reutilizá-los em toda uma coluna.
+  const values=[0,0,0];for(const [a,b,v] of component)values[b]+=v*Math.pow(dx,a);return values;
+}
+function valueInY(c,dy){return c[0]+dy*(c[1]+dy*c[2]);}
+function normalize(values,weights,step){
+  // A mesma quadratura de Simpson normaliza toda a imagem, sem normalizar cada linha.
+  const N=weights.length;let total=0;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++)total+=weights[j]*weights[i]*values[j*N+i];
+  total*=step;for(let i=0;i<values.length;i++)values[i]/=total;return total;
+}
+function hpd(values,weights,step,prob){
+  // Soma massa começando nos pixels mais densos; os pesos físicos entram nessa soma.
+  const N=weights.length,indices=Array.from(values.keys()).sort((a,b)=>values[b]-values[a]);let mass=0;
+  for(const index of indices){mass+=values[index]*weights[index%N]*weights[Math.floor(index/N)]*step;if(mass>=prob)return values[index];}
+  return 0;
+}
+function fields(s){
+  // Constrói referência e aproximação com os mesmos limites, e mede a TV antes de desenhar.
+  const N=s.N,xx=Array.from({length:N},(_,i)=>XMIN+i*(XMAX-XMIN)/(N-1)),yy=Array.from({length:N},(_,j)=>YMIN+j*(YMAX-YMIN)/(N-1));
+  const weights=Array.from({length:N},(_,i)=>i===0||i===N-1?1:(i%2?4:2));
+  const step=(XMAX-XMIN)*(YMAX-YMIN)/(9*(N-1)*(N-1));
+  const angle=s.angle*Math.PI/180,c=s.kind==='ring'?[SX*Math.cos(angle),0]:[0,0];if(s.kind==='ring')c[1]=warp(c[0],s)+SY*Math.sin(angle);
+  const exact=new Float64Array(N*N),approx=new Float64Array(N*N),coeff=series(s.K,c,s),next=s.mix?series(s.K+1,c,s):coeff;
+  for(let i=0;i<N;i++){
+    const x=xx[i],f=warp(x,s),v=coeff.map(a=>coefficientInY(a,x-c[0])),w=next.map(a=>coefficientInY(a,x-c[0]));
+    for(let j=0;j<N;j++){
+      let ux=x/SX,uy=(yy[j]-f)/SY,energy=s.kind==='ring'?Math.pow((ux*ux+uy*uy-1)/TAU,2)/2:(ux*ux+uy*uy)/2;
+      exact[j*N+i]=Math.exp(-energy);let e=0;
+      for(let k=0;k<v.length;k++){let r=(1-s.mix)*valueInY(v[k],yy[j]-c[1])+s.mix*valueInY(w[k],yy[j]-c[1]);e+=r*r/2;}
+      approx[j*N+i]=Math.exp(-e);
+    }
+  }
+  const z=normalize(exact,weights,step),zK=normalize(approx,weights,step),error=new Float64Array(N*N);let tv=0,max=0,maxError=0;  // Cada alvo precisa do próprio normalizador.
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){let id=j*N+i;error[id]=approx[id]-exact[id];tv+=weights[i]*weights[j]*Math.abs(error[id])*step/2;max=Math.max(max,exact[id]);maxError=Math.max(maxError,Math.abs(error[id]));}
+  const levels=[.6827,.9545].map(p=>hpd(exact,weights,step,p));
+  return {s,c,exact,approx,error,tv,max,maxError,z,zK,levels,xx,yy};
+}
+const colors=[[16,30,42],[22,71,86],[43,141,149],[155,211,182],[255,240,194]];
+function sequential(t){t=Math.max(0,Math.min(1,t))*(colors.length-1);const i=Math.min(colors.length-2,Math.floor(t)),q=t-i;return colors[i].map((v,k)=>Math.round(v+(colors[i+1][k]-v)*q));}
+function diverging(t){const base=[16,30,42],end=t<0?[70,123,181]:[237,177,118],q=Math.min(1,Math.abs(t));return base.map((v,k)=>Math.round(v+(end[k]-v)*q));}
+function canvasPoint(x,y,canvas){return [(x-XMIN)/(XMAX-XMIN)*canvas.width,(YMAX-y)/(YMAX-YMIN)*canvas.height];}
+function contours(ctx,canvas,values,levels,N){
+  // Marching squares liga os cruzamentos interpolados de cada célula da malha.
+  for(let levelIndex=0;levelIndex<levels.length;levelIndex++){
+    ctx.beginPath();ctx.strokeStyle='rgba(245,237,223,.73)';ctx.lineWidth=1;ctx.setLineDash(levelIndex?[5,4]:[]);
+    for(let j=0;j<N-1;j++)for(let i=0;i<N-1;i++){
+      const vertex=[[i,j,values[j*N+i]],[i+1,j,values[j*N+i+1]],[i+1,j+1,values[(j+1)*N+i+1]],[i,j+1,values[(j+1)*N+i]]],cross=[];
+      for(let e=0;e<4;e++){const a=vertex[e],b=vertex[(e+1)%4],L=levels[levelIndex];if((a[2]>=L)!==(b[2]>=L)){const t=(L-a[2])/(b[2]-a[2]);cross.push([(a[0]+t*(b[0]-a[0]))/(N-1)*canvas.width,(1-(a[1]+t*(b[1]-a[1]))/(N-1))*canvas.height]);}}
+      for(let n=0;n+1<cross.length;n+=2){ctx.moveTo(...cross[n]);ctx.lineTo(...cross[n+1]);}
+    }
+    ctx.stroke();ctx.setLineDash([]);
+  }
+}
+function renderCanvas(id,values,data,isError=false){
+  // A cor usa a densidade linear. Apenas o painel de diferença recebe sua própria escala.
+  const canvas=$(id),ctx=canvas.getContext('2d'),N=data.s.N,small=document.createElement('canvas');small.width=N;small.height=N;
+  const sctx=small.getContext('2d'),pixels=sctx.createImageData(N,N),scale=isError?(data.maxError||1):data.max;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const color=isError?diverging(values[j*N+i]/scale):sequential(values[j*N+i]/scale),p=((N-1-j)*N+i)*4;pixels.data.set([...color,255],p);}
+  sctx.putImageData(pixels,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(small,0,0,canvas.width,canvas.height);
+  if($('contours').checked)contours(ctx,canvas,data.exact,data.levels,N);
+  if(data.s.kind==='rational'){
+    ctx.strokeStyle='rgba(233,189,118,.7)';ctx.setLineDash([3,5]);
+    for(const x of [-data.s.rho,data.s.rho]){let [cx]=canvasPoint(x,0,canvas);ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,canvas.height);ctx.stroke();}ctx.setLineDash([]);
+  }
+  if(id==='approx'){
+    const [x,y]=canvasPoint(...data.c,canvas);ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.strokeStyle='#e9bd76';ctx.lineWidth=2;ctx.stroke();
+  }
+}
+function settings(){return {kind:$('model').value,K:+$('order').value,mix:+$('blend').value,a:+$('amplitude').value,b:+$('bend').value,k:+$('frequency').value,rho:+$('radius').value,angle:+$('anchor').value,N:+$('resolution').value};}
+function render(){
+  // Atualiza números e figuras juntos para que os controles não deixem métricas antigas na tela.
+  scheduled=false;if(+$('order').value===16)$('blend').value=0;const s=settings(),start=performance.now();$('blend').disabled=s.K===16;
+  for(const id of ['order','blend','amplitude','frequency','bend','radius','anchor'])$(id+'Out').textContent=$(id).value;
+  $('anchor').disabled=s.kind!=='ring';$('radius').disabled=s.kind!=='rational';$('frequency').disabled=s.kind==='rational';$('bend').disabled=s.kind==='rational';
+  const data=fields(s);frameData=data;
+  renderCanvas('exact',data.exact,data);renderCanvas('approx',data.approx,data);renderCanvas('error',data.error,data,true);
+  $('maxP').textContent=data.max.toFixed(3);$('maxError').textContent=data.maxError.toFixed(3);$('tv').textContent=data.tv.toFixed(5);
+  $('degree').textContent='≤ '+2*(s.K+(s.mix>0?1:0));$('rank').textContent=s.kind==='ring'?'1 / 2':'2 / 2';$('stage').textContent=s.mix?s.K+' → '+(s.K+1):'K = '+s.K;
+  $('approxTitle').textContent=s.mix?'02 · Transição visual':'02 · DALI K='+s.K;
+  $('approxSubtitle').textContent=s.mix?'Interpolação dos modelos; ainda não é a próxima ordem.':'Taylor do modelo, seguido do quadrado completo.';
+  const messages={gaussian:'O resíduo em y segue uma curva senoidal. A sequência deve recuperar suas dobras na região relevante. As ordens podem ter patamares: no centro x=0, muitas derivadas pares da senoide são nulas.',ring:'Um dado escalar mede o raio deformado e deixa uma curva inteira de máximos. Fisher tem posto um; a prior finita normaliza a faixa de D1. Troque a âncora e veja como uma descrição local pode depender de onde começamos.',rational:'Uma função suave no eixo real também pode ter um Taylor com raio finito. Os polos em x=±iρ limitam a série em torno de zero. Aumentar K fora de |x|<ρ pode afastar o desenho do alvo.'};
+  $('explanation').textContent=messages[s.kind];
+  $('notice').textContent=s.mix?'A transição é ilustrativa: não representa uma ordem fracionária de DALI.':(s.kind==='ring'?'Não inverta este Fisher para anunciar dois erros finitos.':s.kind==='rational'?'Mais tinta não estende o raio de convergência.':'A TV compara densidades normalizadas; semelhança visual não substitui essa conferência.');
+  $('status').textContent=`Prévia ${s.N}×${s.N} · Simpson 2D · ${Math.round(performance.now()-start)} ms · prior e escala de cor fixas nesta comparação.`;
+}
+function requestRender(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
+// As ações abaixo mudam as configurações e reaproveitam a mesma rotina de cálculo.
+function stop(){if(timer)clearInterval(timer);timer=null;$('play').textContent='▶ Formar a imagem';}
+for(const input of document.querySelectorAll('input,select'))input.addEventListener('input',()=>{if(input.id==='order'||input.id==='blend')stop();requestRender();});
+$('play').addEventListener('click',()=>{if(timer){stop();return;}$('blend').value=0;$('order').value=1;render();$('play').textContent='❚❚ Pausar';timer=setInterval(()=>{if(+$('order').value>=16){stop();return;}$('order').value=+$('order').value+1;render();},950);});
+$('reset').addEventListener('click',()=>{stop();for(const [id,value] of Object.entries({order:1,blend:0,amplitude:.72,frequency:2.35,bend:.10,radius:.72,anchor:90,resolution:241}))$(id).value=value;$('contours').checked=true;render();});
+$('download').addEventListener('click',()=>{
+  const canvas=document.createElement('canvas');canvas.width=1380;canvas.height=590;const ctx=canvas.getContext('2d');ctx.fillStyle='#101e2a';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#f5eddf';ctx.font='22px Georgia';ctx.fillText('A persistência da não gaussianidade',20,30);
+  ['exact','approx','error'].forEach((id,i)=>{ctx.font='13px system-ui';ctx.fillText(['Modelo completo',$('approxTitle').textContent,'Diferença de densidades'][i],20+i*455,60);ctx.drawImage($(id),20+i*455,77,440,480);});
+  ctx.font='12px system-ui';ctx.fillStyle='#e9bd76';ctx.fillText(`Modelo ${frameData.s.kind} · K=${frameData.s.K} · transição=${frameData.s.mix} · TV=${frameData.tv.toFixed(5)} · prior dx dy no retângulo declarado`,20,580);
+  const link=document.createElement('a');link.download='oficina_dali_comparacao.png';link.href=canvas.toDataURL('image/png');link.click();
+});
+// A função é exposta para conferir a matemática da página contra o módulo Python.
+window.OficinaDALI={fields,series,warp,warpCoefficients,settings,render};
+render();
+</script></body></html>
