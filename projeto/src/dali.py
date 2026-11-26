@@ -718,3 +718,39 @@ def compress_dali(expansion: DALIExpansion) -> CompressedDALI:
             powers.append(counts)
     _, factor = np.linalg.qr(np.column_stack(columns), mode='reduced')  # Preserva todas as normas das combinações dessas colunas.
     return CompressedDALI(expansion.center.copy(), np.array(powers), factor)
+
+
+# ------------------------------------------------------------------------------
+# Diagnósticos 3D: usar as marginais já calculadas e percorrer planos, sem cubos
+# ------------------------------------------------------------------------------
+
+def grid_moments_3d(result: Grid3DResult) -> tuple[FloatArray, FloatArray]:
+    """Obtém média e covariância 3D pelas marginais e pelos três pares."""
+    mean = np.array([simpson(x*p,x=x) for x,p in zip(result.axes,result.marginals)])  # Integra a média física de cada parâmetro.
+    covariance = np.empty((3,3))
+    for i,(x,p) in enumerate(zip(result.axes,result.marginals)):
+        covariance[i,i] = simpson((x-mean[i])**2*p,x=x)  # Usa a marginal do próprio parâmetro na variância.
+    for (i,j),pdf in result.pairs.items():
+        first,second = np.meshgrid(result.axes[i],result.axes[j])  # Respeita a orientação das linhas e colunas do par.
+        value = integrate_grid_2d((first-mean[i])*(second-mean[j])*pdf,result.axes[i],result.axes[j])
+        covariance[i,j] = covariance[j,i] = value  # Preenche a correlação cruzada sem guardar a distribuição inteira.
+    return mean,covariance
+
+
+def total_variation_grid_3d(first_log_density, first: Grid3DResult,
+                            second_log_density, second: Grid3DResult) -> float:
+    """Integra TV de duas densidades 3D na mesma malha, usando seus normalizadores."""
+    if not all(np.array_equal(a,b) for a,b in zip(first.axes,second.axes)):
+        raise ValueError('As duas distribuições devem usar os mesmos três eixos.')
+    x,y,z = first.axes
+    wx,wy,wz = (_regular_simpson_weights(axis) for axis in first.axes)  # Inclui os pesos físicos das três integrações.
+    xx,yy = np.meshgrid(x,y)
+    points = np.empty(xx.shape+(3,))
+    points[...,0],points[...,1] = xx,yy  # Reutiliza as coordenadas livres do plano.
+    total = 0.
+    for k,value in enumerate(z):
+        points[...,2] = value  # Percorre um plano da terceira variável por vez.
+        p = np.exp(first_log_density(points)-first.log_normalizer)  # Usa a normalização conjunta do primeiro alvo.
+        q = np.exp(second_log_density(points)-second.log_normalizer)  # Evita renormalizar cada plano como se fosse um corte.
+        total += wz[k]*np.einsum('i,ij,j->',wy,abs(p-q),wx)  # Integra o módulo da diferença antes de marginalizar.
+    return float(.5*total)

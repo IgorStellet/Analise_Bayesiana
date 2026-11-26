@@ -1,0 +1,23 @@
+{
+  "source_page": "https://sdss3.org/science/boss_publications.php",
+  "download_url": "https://data.sdss.org/sas/dr12/boss/papers/clustering/ALAM_ET_AL_2016_consensus_and_individual_Gaussian_constraints.tar.gz",
+  "retrieved_on": "2026-11-26",
+  "archive_sha256": "23c82f1b17279176167d7de62dac197be36f41c135fa38116f43abec771aac32",
+  "rd_fid_Mpc": 147.78,
+  "files": [
+    {
+      "file": "BAO_consensus_results_dM_Hz.txt",
+      "source_url": "https://data.sdss.org/sas/dr12/boss/papers/clustering/ALAM_ET_AL_2016_consensus_and_individual_Gaussian_constraints.tar.gz",
+      "archive_member": "COMBINEDDR12_BAO_consensus_dM_Hz/BAO_consensus_results_dM_Hz.txt",
+      "bytes": 203,
+      "sha256": "30e784fa08e7eddb2fdd1ab09411424e67aa9b75df58f4bb330a889c9b9c478e"
+    },
+    {
+      "file": "BAO_consensus_covtot_dM_Hz.txt",
+      "source_url": "https://data.sdss.org/sas/dr12/boss/papers/clustering/ALAM_ET_AL_2016_consensus_and_individual_Gaussian_constraints.tar.gz",
+      "archive_member": "COMBINEDDR12_BAO_consensus_dM_Hz/BAO_consensus_covtot_dM_Hz.txt",
+      "bytes": 288,
+      "sha256": "05c04829c8edc117870efe809494593a23de6c35547f8b66760a5250804b65cf"
+    }
+  ]
+}
