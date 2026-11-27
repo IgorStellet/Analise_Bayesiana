@@ -40,7 +40,7 @@ source .venv/bin/activate
 python -m jupyterlab
 ```
 
-O instalador utiliza a `.venv` da raiz e instala as dependências do conjunto dos slides: NumPy, SciPy, Matplotlib, pandas e IPython, além de JupyterLab e ipykernel. O mesmo ambiente será reaproveitado pelos instaladores das listas e das práticas. Para Windows sem WSL, veja o [README central](../../README.md#windows-sem-wsl).
+O instalador utiliza a `.venv` da raiz e instala as dependências do conjunto dos slides: NumPy, SciPy, Matplotlib, pandas e IPython, além de JupyterLab e ipykernel. O mesmo ambiente é reaproveitado pelos instaladores das listas, das práticas e do projeto. Para instalar todo o repositório, use `bash instalar.sh` na raiz. Para Windows sem WSL, veja o [README central](../../README.md#windows-sem-wsl).
 
 O núcleo do notebook de MCMC pode ser estudado sem instalar os pacotes dos complementos opcionais. Para executar também os exemplos com Cobaya e emcee:
 

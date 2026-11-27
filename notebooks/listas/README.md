@@ -1,10 +1,10 @@
 # Listas
 
-Será feito um notebook para cada lista. 
+Há um notebook para cada uma das três listas. 
 
-O objetivo é fazer os gráficos, tabelas e contas de cada questão para poder escrever mais facilmente no overleaf, além de servir como um estudo de como programar.
+Os notebooks reúnem gráficos, tabelas e contas de cada questão, complementando as resoluções escritas no Overleaf e servindo como estudo de programação científica.
 
-As discussões no notebook serão mais diretas objetivas e curtas, a discussão completa abrindo as contas será reservada para o PDF com as resoluções (overleaf).
+As deduções e discussões completas também estão nas resoluções em PDF preparadas no Overleaf.
 
 ## Organização das saídas
 
@@ -26,7 +26,7 @@ source .venv/bin/activate
 python -m jupyterlab
 ~~~
 
-O instalador usa a mesma `.venv` da raiz compartilhada com os slides e as aulas práticas. As listas requerem NumPy 2.0 ou superior, além de SciPy, Matplotlib e IPython. Selecione o kernel **Análise Bayesiana (.venv)** e execute os notebooks com o diretório de trabalho em `notebooks/listas`, para preservar os caminhos das figuras e tabelas.
+O instalador usa a mesma `.venv` da raiz compartilhada com os slides, as aulas práticas e o projeto. Para instalar o repositório completo, use `bash instalar.sh` na raiz. As listas requerem NumPy 2.0 ou superior, além de SciPy, Matplotlib e IPython. Selecione o kernel **Análise Bayesiana (.venv)** e execute os notebooks com o diretório de trabalho em `notebooks/listas`, para preservar os caminhos das figuras e tabelas.
 
 Para Windows sem WSL, siga a instalação manual do README central, usando o arquivo `notebooks/listas/requirements.txt`.
 

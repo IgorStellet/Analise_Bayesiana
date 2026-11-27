@@ -1,7 +1,8 @@
-# Importados nas práticas de MCMC e grid.
+# Importados nas práticas de MCMC e grid, incluindo mymodule.py.
 numpy>=1.24
 scipy>=1.10
 matplotlib>=3.7
+pandas>=1.5
 sympy
 ipywidgets
 ipython
@@ -9,6 +10,8 @@ cobaya
 getdist
 emcee
 astropy
+camb
+h5py
 
 # Interface e kernel.
 jupyterlab>=4.0

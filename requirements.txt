@@ -1,0 +1,6 @@
+# Instalação completa: reutiliza os requisitos de cada conjunto.
+# Inclui os complementos de MCMC dos slides; os pacotes comuns são resolvidos uma vez.
+-r notebooks/exercicios_slides/requirements_mcmc.txt
+-r notebooks/aulas_praticas/requirements.txt
+-r notebooks/listas/requirements.txt
+-r projeto/requirements.txt

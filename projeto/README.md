@@ -6,82 +6,80 @@ Autor: Igor Stellet
 Matéria: Estatística Bayesiana, CBPF, 2026/2
 ---------------------------------------------------
 
-Nesse projeto, vamos estudar como a aproximação de Fisher pode ser estendida para o método DALI (*Derivative Approximation for LIkelihoods*), quais posterior conseguimos descrever com essa aproximação e emq eu situações o aumento da ordem vale a pena ou deixa de compensar pelo seu custo computacional.
+Neste projeto, estudamos como DALI estende a aproximação de Fisher, quais não gaussianidades consegue descrever e quando aumentar a ordem melhora a inferência ou deixa de compensar pelo custo computacional. O título é inspirado em *A Persistência da Memória*, de Salvador Dalí.
 
-O percurso do projeto está pensado da seguinte forma: Começamos pela construção matemática do método, fazemos exemplos controlados e fazemos um exemplo da Lista 3 do curso, que evidencia o tratamento das não gaussianidades. Após essas aplicações simples, aplicamos o método em dados de supernovas, reproduzindo o artigo mostrado em sala e também aplicamos a medidas de BAO, proveniente de galáxias, buscando fazer uma aplicação nova.
+O [notebook principal](projeto_dali.ipynb) reúne as hipóteses, deduções, aplicações, resultados e referências. Este README apresenta a organização dos arquivos e como executar o projeto.
 
-O título do projeto é uma referência a obra *A Persistência da Memória*, de salvador Dali, cujo quadro pode ser visto no [MoMA](https://www.moma.org/collection/works/79018). A passagem de elipses (Fisher) para contornos deformados motiva o nome DALI e, por isso, vamos fazer como tarefa criativa tentar reproduzir as não Gaussianidades nesse projeto.
+![Capa do projeto](figuras/bloco_07/capa_oficina_dali.png)
 
-
-Entrega: Em um único [notebook principal](projeto_dali.ipynb), que terá todos os resultados principais, acompanhado de funções que utilizaremos de forma constante e que poder ser reaproveitadas em outros trabalhos em um módulo Python](src/dali.py) e desta documentação. O notebook contém a explicação cinetífica completa: hipóteses, deduções, implmentações, gráficos, resultados, limitações e referências.
-
-![Posterior curva comparada com Fisher e com a expansão quadrática do modelo](figuras/visao_geral_fisher_dali.png)
-
-*Figura de orientação.* Modelo com dados $d=(0,0)$, predição $\mu(x,y)=(x,y-0.55x^2)$, covariância $\operatorname{diag}(1,0.45^2)$ e priors uniformes no retângulo $x\in[-3,3]$, $y\in[-1.8,5.6]$. Os contornos encerram 68,3% e 95,4% da probabilidade conjunta de cada distribuição normalizada. A expansão do modelo até segunda ordem é exata neste exemplo. O [código da figura](figuras/gerar_visao_geral.py) acompanha os arquivos.
+Figura desenvolvida ao longo do projeto! 
 
 
-## Sumário | README
-- [1. Sequência do notebook único](#1-sequência-do-notebook-único)
-- [2. Organização e execução](#10-organização-e-execução)
+## Instalação e execução
 
-
-## 1. Sequência do notebook único
-
-O arquivo [projeto_dali.ipynb](projeto_dali.ipynb) é dividio em blocos. Abaixo está a divisão deles
-
-| Bloco | Conteúdo | Resultado esperado |
-|---|---|---|
-| **0. Leitura e execução** | Objetivos, sumário, ambiente, convenções e configurações. | Permitir acompanhar e reproduzir o trabalho. |
-| **1. Modelo probabilístico e Fisher** | Dados, likelihood, prior, posterior, informação e curvatura. | Construir a aproximação gaussiana e interpretar suas condições. |
-| **2. Hierarquia de DALI** | Expansão do modelo, termos cruzados e tratamento das priors. | Derivar singleto, dubleto e tripleto. |
-| **3. Exemplos controlados** | Modelos linear, quadrático, inverso e contraexemplo. | Identificar mecanismos de sucesso e falha. |
-| **4. Aplicação à Lista 3** | Cortes, marginais, não gaussianidade e comparação com a questão 5. | Validar a construção quadrática e discutir o conteúdo perdido por Fisher. |
-| **5. Supernovas** | Dados, cosmologia, calibração, referência e aproximações. | Reproduzir a aplicação principal do artigo. |
-| **6. BAO e combinação de observáveis** | Dados comprimidos de galáxias, covariância e inferência conjunta. | Avaliar a mudança das degenerescências e da precisão. |
-| **7. Oficina visual** | Posterior com contornos deformados inspirados em Dalí. | Explorar o alcance local e global das aproximações de forma ilustrativa. |
-| **8. Precisão e custo** | Métricas, tempos, convergência e ponto de compensação. | Comparar desempenho com a qualidade da inferência controlada. |
-| **9. Síntese e referências** | Respostas às perguntas, limitações e próximos passos. | Relacionar os resultados às hipóteses de cada estudo. |
-
-## 2. Organização e execução
-
-### 2.1 Arquivos iniciais e estrutura prevista
-
-| Caminho dentro de `projeto/` | Papel | Situação |
-|---|---|---|
-| [`README.md`](README.md) | Planejamento, navegação, referências e acompanhamento. | Criado. |
-| [`projeto_dali.ipynb`](projeto_dali.ipynb) | Único documento científico principal. | Introdução, configuração e roteiro criados; análise a desenvolver. |
-| [`src/dali.py`](src/dali.py) | Funções principais reutilizáveis. | Módulo inicial; funções a desenvolver junto das derivações. |
-| [`src/__init__.py`](src/__init__.py) | Organização dos módulos Python. | Criado. |
-| [`figuras/gerar_visao_geral.py`](figuras/gerar_visao_geral.py) | Código da figura de orientação. | Criado e executado. |
-| [`figuras/visao_geral_fisher_dali.png`](figuras/visao_geral_fisher_dali.png) e versão SVG | Figura de orientação. | Criadas. |
-| `tests/` | Testes científicos e numéricos. | Planejado. |
-| `data/` | Dados utilizados e sua procedência. | Planejado. |
-| `tabelas/` | Tabelas geradas pelas análises. | Planejado. |
-| Arquivo de requisitos e instalador do projeto | Instalação na `.venv` da raiz. | Definição ao concluir as dependências. |
-
- Uma documentação `.md` específica das funções poderá ser preparada ao final, depois de sua interface estar consolidada. Durante o desenvolvimento, docstrings e explicações no notebook acompanharão o código.
-
-### 2.2 Ambiente compartilhado
-
-O projeto seguirá a instalação incremental do [README central](../README.md). O ambiente fica na **`.venv` da raiz do repositório** e será reaproveitado pelos conjuntos de notebooks.
-
-Para abrir o JupyterLab usando esse ambiente, a partir da raiz:
+A partir da raiz do repositório, em Linux, macOS ou WSL, com Python 3.10 ou superior:
 
 ```bash
+bash projeto/instalar.sh
 source .venv/bin/activate
 python -m jupyterlab
 ```
 
-Abra `projeto/projeto_dali.ipynb` e selecione o kernel **Análise Bayesiana (.venv)**. No Windows sem WSL, siga as instruções de ativação e execução do README central.
+Abra `projeto/projeto_dali.ipynb` e selecione **Análise Bayesiana (.venv)**. O instalador cria ou reaproveita a `.venv` da raiz, instala os requisitos do projeto e confere seus imports. Para instalar também listas, slides e práticas, use `bash instalar.sh` na raiz. Para Windows sem WSL, siga o [README central](../README.md#windows-sem-wsl).
 
-As células iniciais usam apenas a biblioteca padrão e o módulo local. Para reproduzir a figura deste README, NumPy e Matplotlib precisam estar disponíveis; ambos constam na instalação da base dos slides:
+Mantenha as pastas `src/` e `data/` junto do notebook. Os blocos observacionais usam as cópias locais dos dados e documentam sua procedência. As cadeias, malhas e medições de tempo são executadas no próprio notebook; o tempo necessário depende da configuração e da máquina.
+
+## Percurso do notebook
+
+| Bloco | Conteúdo |
+|---|---|
+| **0** | Leitura, execução e convenções. |
+| **1** | Modelo probabilístico, likelihood, priors e geometria de Fisher. |
+| **2** | Construção e hipóteses da hierarquia de DALI. |
+| **3** | Exemplos controlados, parametrização e modos espúrios. |
+| **4** | Aplicação à Lista 3: marginais, cortes e não gaussianidades. |
+| **5** | Supernovas Union2.1, calibração e comparação das aproximações. |
+| **6** | BAO de BOSS DR12 e combinação com supernovas. |
+| **7** | Oficina visual inspirada em Dalí e exploração interativa. |
+| **8** | Precisão, custo computacional, grid e MCMC. |
+| **9** | Síntese dos resultados e referências por bloco. |
+
+## Arquivos e pastas
+
+| Caminho | Função |
+|---|---|
+| [`projeto_dali.ipynb`](projeto_dali.ipynb) | Documento científico principal. |
+| [`src/`](src/) | Funções reutilizáveis, documentadas no código e explicadas no notebook. |
+| [`tests/`](tests/) | Testes matemáticos e numéricos dos módulos. |
+| [`data/union21/`](data/union21/README.md) | Dados de supernovas, covariâncias e procedência. |
+| [`data/boss_dr12/`](data/boss_dr12/README.md) | Medidas BAO, covariância e procedência. |
+| [`figuras/`](figuras/) | Figuras, versões vetoriais e oficina visual em HTML. |
+| [`tabelas/`](tabelas/) | Resultados, amostras e registros de configuração das análises. |
+| [`requirements.txt`](requirements.txt), [`instalar.sh`](instalar.sh) e [`verificar_ambiente.py`](verificar_ambiente.py) | Instalação e conferência do ambiente. |
+
+Os módulos de `src/` estão divididos por finalidade:
+
+| Módulo | Conteúdo |
+|---|---|
+| [`dali.py`](src/dali.py) | Expansões, informação de Fisher, malhas, marginais e métricas básicas. |
+| [`lista3.py`](src/lista3.py) | Modelo e comparações da questão da Lista 3. |
+| [`supernovas.py`](src/supernovas.py) | Distâncias cosmológicas, calibração e análise de supernovas. |
+| [`bao.py`](src/bao.py) | Observáveis BAO e combinação com supernovas. |
+| [`amostragem.py`](src/amostragem.py) | Amostragem e diagnósticos das cadeias. |
+| [`oficina.py`](src/oficina.py) | Modelos e expansões da oficina visual. |
+| [`eficiencia.py`](src/eficiencia.py) | Precisão, cronômetros e MCMC com aceitação em duas etapas. |
+
+## Verificação e testes
+
+Para repetir a conferência dos imports ou executar os testes científicos, a partir da raiz:
 
 ```bash
-bash notebooks/exercicios_slides/instalar.sh
-python projeto/figuras/gerar_visao_geral.py
+.venv/bin/python projeto/verificar_ambiente.py
+.venv/bin/python -m unittest discover -s projeto/tests -v
 ```
 
-O notebook localizará a pasta `projeto/` ao ser iniciado nessa pasta ou na raiz do repositório. Os caminhos das saídas serão construídos a partir dessa localização. As execuções caras terão configurações explícitas e as versões finais informarão como reproduzir as saídas apresentadas.
+Os testes verificam propriedades analíticas e numéricas; as figuras e interpretações permanecem no notebook. Os requisitos indicam versões mínimas, e as versões utilizadas nas análises estão registradas com suas saídas.
 
-Ao concluir o projeto, prepararemos seus requisitos, seu verificador e seu instalador, além da instalação completa do repositório, sempre utilizando a mesma `.venv` da raiz.
+A [oficina visual em HTML](figuras/bloco_07/oficina_visual.html) também pode ser baixada e aberta diretamente no navegador, sem kernel. As referências científicas e os créditos artísticos estão no Bloco 9 do notebook.
 
+![Tirinha](figuras/bloco_09/good_science.png)

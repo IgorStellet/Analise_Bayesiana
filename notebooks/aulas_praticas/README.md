@@ -1,3 +1,4 @@
+# Aulas práticas
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -18,7 +19,7 @@ python -m jupyterlab
 
 O instalador cria ou reaproveita **a `.venv` da raiz**, compartilhada com os slides e as listas. Instala as dependências desta pasta, executa `pip check`, confere os imports de MCMC e grid e registra o kernel **Análise Bayesiana (.venv)** dentro do próprio ambiente. A ativação no terminal é feita depois que o script termina.
 
-Além dos pacotes inicialmente pedidos para MCMC, o arquivo de requisitos inclui SciPy, SymPy e ipywidgets, utilizados na prática de grid. Os controles interativos precisam do notebook aberto em uma interface compatível, como o JupyterLab; a visualização estática do GitHub não executa esses controles.
+Além dos pacotes inicialmente pedidos para MCMC, os requisitos incluem SciPy, SymPy e ipywidgets para grid, e pandas, CAMB e h5py, importados por `mymodule.py`. A instalação completa do repositório também está disponível com `bash instalar.sh`, na raiz. Os controles interativos precisam do notebook aberto em uma interface compatível, como o JupyterLab; a visualização estática do GitHub não executa esses controles.
 
 Para Windows sem WSL, siga o [README central](../../README.md#windows-sem-wsl), trocando o caminho do arquivo de requisitos e do verificador pelos desta pasta.
 

@@ -37,11 +37,14 @@ cd Analise_Bayesiana
 
 Escolha qual dos notebooks quer ser rodado:
 
-| Conjunto | Comando a partir da raiz |
+| O que executar | Comando |
 |---|---|
-| Slides | `bash notebooks/exercicios_slides/instalar.sh` |
+| Apenas os estudos dos slides | `bash notebooks/exercicios_slides/instalar.sh` |
+| Slides, incluindo os complementos de MCMC | `bash notebooks/exercicios_slides/instalar.sh mcmc` |
 | Listas | `bash notebooks/listas/instalar.sh` |
 | Aulas práticas | `bash notebooks/aulas_praticas/instalar.sh` |
+| Projeto Fisher e DALI | `bash projeto/instalar.sh` |
+| Repositório completo | `bash instalar.sh` |
 
 Cada instalador usa o `requirements.txt` da respectiva pasta, verifica a consistência das dependências com `pip check` e testa os imports. Os requisitos cobrem o conjunto de notebooks daquela pasta e incluem JupyterLab e o kernel, além das dependências indiretas necessárias aos pacotes.
 
@@ -64,40 +67,51 @@ bash notebooks/aulas_praticas/instalar.sh
 
 O ambiente continua sendo o mesmo. Pacotes já instalados que satisfazem os requisitos são reaproveitados. Versões podem ser ajustadas quando uma nova dependência exigir.
 
-O notebook de MCMC dos slides possui complementos opcionais com Cobaya e emcee. Para habilitá-los:
-
-```bash
-bash notebooks/exercicios_slides/instalar.sh mcmc
-```
+A instalação completa reúne os arquivos de requisitos das quatro partes, incluindo Cobaya e emcee.
 
 ### Windows sem WSL
 
-No PowerShell, também é possível usar os mesmos arquivos de requisitos. Exemplo para os slides, a partir da raiz:
+No PowerShell, também é possível usar os mesmos arquivos de requisitos. 
+
+Na primeira instalação, a partir da raiz, crie o ambiente:
 
 ```powershell
 py -m venv --prompt analise-bayesiana .venv
-.\.venv\Scripts\python.exe -m pip install -r notebooks/exercicios_slides/requirements.txt
+```
+
+Para instalar e verificar o repositório completo:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe notebooks/exercicios_slides/verificar_ambiente.py
+.\.venv\Scripts\python.exe verificar_ambiente.py
 .\.venv\Scripts\python.exe -m ipykernel install --sys-prefix --name analise-bayesiana --display-name "Análise Bayesiana (.venv)"
 .\.venv\Scripts\python.exe -m jupyterlab
 ```
 
-Execute a criação com `venv` apenas na primeira instalação. Para acrescentar listas ou práticas, use o Python dessa mesma `.venv` com o `requirements.txt` e o verificador da pasta escolhida. No VS Code, o interpretador é `.venv\Scripts\python.exe`. Um ambiente criado no Windows e outro criado no WSL pertencem a sistemas diferentes; escolha um deles para trabalhar com esta cópia do repositório.
+Para instalar só uma parte, troque os caminhos dos requisitos e do verificador pelos da pasta escolhida, por exemplo `projeto/requirements.txt` e `projeto/verificar_ambiente.py`. Reaproveite o mesmo Python nas instalações seguintes. No VS Code, selecione `.venv\Scripts\python.exe`. Use a cópia do repositório no sistema escolhido: ambientes Windows e WSL são distintos.
 
-## To Do
+## Verificação
+
+Após a instalação completa, os imports podem ser conferidos novamente sem reinstalar pacotes:
+
+```bash
+.venv/bin/python verificar_ambiente.py
+```
+
+Para conferir apenas uma parte, execute o `verificar_ambiente.py` daquela pasta. Esses verificadores conferem o ambiente; os testes científicos e as análises estão documentados nos notebooks e no [README do projeto](projeto/README.md#verificação-e-testes).
+
+## To Do - Revisão didática das aulas
 
 Futuramente, é de meu interesse melhorar a organização dos notebooks referente aos slides e aulas práticas, deixando todos em uma única pasta. Idealmente, os notebooks estariam divididos de forma fluida e didática, seguindo as semanas da aula ou os capítulos do Gregory, discutindo os exemplos feitos e os conceitos aprendidos, com exemplos iterativos e variáveis para serem alteradas e com partes "hands-on" para quem estiver acompanhando. Com atividades para os alunos, infelizmente não tive tempo de produzir algo tão organizado, mas seria algo legal de se fazer futuramente, talvez em uma monitoria. Esses notebooks referente aos slides ficaram um pouco "jogados" devido a quantidade de atividades a se fazer.
 
-- [X] Desenvolver o projeto final em `projeto/`, com módulos reutilizáveis e testes adequados a cada uma das funções implementadas.
-- [ ] Ao concluir o projeto, preparar seu arquivo de dependências, seu verificador e seu instalador, reutilizando a `.venv` da raiz.
-- [ ] Ao concluir o projeto, criar uma instalação completa que reúna as dependências de todos os conjuntos e do projeto.
 - [ ] Revisar os notebooks de estudo e integrar teoria e prática em um percurso por capítulos ou semanas, conforme o [plano dos slides](notebooks/exercicios_slides/README.md#to-do--revisão-didática-futura).
 
-## Referências principais utilizadas em aula
+## Referências da disciplina
 
-- Phil Gregory, *Bayesian Logical Data Analysis for the Physical Sciences* — livro-texto e referência principal.
+- Phil Gregory, *Bayesian Logical Data Analysis for the Physical Sciences* - Livro texto principal da disciplina.
 - Roberto Trotta, *Bayesian Methods in Cosmology*.
 - Luca Amendola, *Statistical Methods: Lecture Notes*.
-- Slides da disciplina, ministrada por Miguel Quartin.
+- Slides e listas da disciplina, de Miguel Quartin.
 
+As referências específicas do projeto estão reunidas por bloco ao final de seu notebook.
