@@ -89,7 +89,7 @@ Execute a criação com `venv` apenas na primeira instalação. Para acrescentar
 
 Futuramente, é de meu interesse melhorar a organização dos notebooks referente aos slides e aulas práticas, deixando todos em uma única pasta. Idealmente, os notebooks estariam divididos de forma fluida e didática, seguindo as semanas da aula ou os capítulos do Gregory, discutindo os exemplos feitos e os conceitos aprendidos, com exemplos iterativos e variáveis para serem alteradas e com partes "hands-on" para quem estiver acompanhando. Com atividades para os alunos, infelizmente não tive tempo de produzir algo tão organizado, mas seria algo legal de se fazer futuramente, talvez em uma monitoria. Esses notebooks referente aos slides ficaram um pouco "jogados" devido a quantidade de atividades a se fazer.
 
-- [ ] Desenvolver o projeto final em `projeto/`, com módulos reutilizáveis e testes adequados a cada uma das funções implementadas.
+- [X] Desenvolver o projeto final em `projeto/`, com módulos reutilizáveis e testes adequados a cada uma das funções implementadas.
 - [ ] Ao concluir o projeto, preparar seu arquivo de dependências, seu verificador e seu instalador, reutilizando a `.venv` da raiz.
 - [ ] Ao concluir o projeto, criar uma instalação completa que reúna as dependências de todos os conjuntos e do projeto.
 - [ ] Revisar os notebooks de estudo e integrar teoria e prática em um percurso por capítulos ou semanas, conforme o [plano dos slides](notebooks/exercicios_slides/README.md#to-do--revisão-didática-futura).
